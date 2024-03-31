@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:healthylife/widget/home/home_bottom_navigation.dart';
 import 'package:intl/intl.dart';
 
 
@@ -673,7 +674,7 @@ class _AddInforState extends State<AddInfo>{
             backgroundColor: MaterialStateProperty.all(Colors.blueAccent.shade100),
             foregroundColor: MaterialStateProperty.all(Colors.white)
           ),
-          onPressed: () {  },
+          onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation())); },
           child: Text('Xác nhận',
             style: TextStyle(fontSize: 16),
           ),

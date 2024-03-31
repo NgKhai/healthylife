@@ -41,6 +41,10 @@ dependencies:
   firebase_auth: ^4.17.9
   cloud_firestore: ^4.15.9
   intl: ^0.18.0
+  gauge_indicator: ^0.4.3
+  flutter_colorpicker: ^1.0.3
+  google_fonts: ^5.1.0
+  d_chart: ^2.6.9
 
 dev_dependencies:
   flutter_test:

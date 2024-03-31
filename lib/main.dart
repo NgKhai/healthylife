@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
       supportedLocales: [
         const Locale('vi', 'VN')
       ],
-      home: FoodCaloPage(),
+      home: SplashScreenPage(),
     );
   }
 }
