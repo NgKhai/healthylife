@@ -45,6 +45,8 @@ dependencies:
   flutter_colorpicker: ^1.0.3
   google_fonts: ^5.1.0
   d_chart: ^2.6.9
+  image_picker: ^1.0.7
+  firebase_storage: ^11.6.11
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:healthylife/CRUD/page/food_manager.dart';
 import 'package:healthylife/page/account/splashscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:healthylife/page/food_calo/food_calo.dart';
@@ -20,6 +21,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
+      debugShowCheckedModeBanner: false,
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -28,7 +30,7 @@ class MyApp extends StatelessWidget {
       supportedLocales: [
         const Locale('vi', 'VN')
       ],
-      home: SplashScreenPage(),
+      home: FoodManager(),
     );
   }
 }
