@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gauge_indicator/gauge_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:healthylife/util/color_theme.dart';
 
 import '../../page/calo/calo_page.dart';
 
@@ -35,7 +36,7 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(15.0),
           child: Container(
-            color: const Color(0xFFDE5044),
+            color: ColorTheme.darkGreenColor,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -73,6 +74,7 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.01,),
                           Text(
                             'Cần nạp',
                             style: GoogleFonts.getFont(

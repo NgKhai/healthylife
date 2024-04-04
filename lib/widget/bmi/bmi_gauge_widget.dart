@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gauge_indicator/gauge_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:healthylife/util/color_theme.dart';
 import 'package:intl/intl.dart';
 
 class BMIGaugeWidget extends StatefulWidget {
@@ -43,7 +44,7 @@ class _BMIGaugeWidgetState extends State<BMIGaugeWidget> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(15.0),
         child: Container(
-          color: const Color(0xFFDE5044),
+          color: ColorTheme.darkGreenColor,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -115,9 +116,9 @@ class _BMIGaugeWidgetState extends State<BMIGaugeWidget> {
                           radius: 150,
                           // Chỉnh độ to nhỏ của gauge
                           curve: Curves.elasticOut,
-                          axis: const GaugeAxis(
+                          axis: GaugeAxis(
                             min: 0,
-                            max: 50,
+                            max: 40,
                             degrees: 180,
                             pointer: GaugePointer.triangle(
                               width: 35,
@@ -128,7 +129,7 @@ class _BMIGaugeWidgetState extends State<BMIGaugeWidget> {
                                 offset: Offset(0, 35 * 0.6),
                               ),
                               border: GaugePointerBorder(
-                                color: Color(0xFFDE5044),
+                                color: ColorTheme.darkGreenColor,
                                 width: 35 * 0.125,
                               ),
                             ),
@@ -147,34 +148,34 @@ class _BMIGaugeWidgetState extends State<BMIGaugeWidget> {
                             ),
                             progressBar: null,
                             segments: [
-                              const GaugeSegment(
+                               GaugeSegment(
                                 from: 0,
-                                to: 18.4,
-                                color: Color(0xFF32B5EB),
+                                to: 18.5,
+                                color: ColorTheme.gaugeColor1,
                                 cornerRadius: Radius.zero,
                               ),
-                              const GaugeSegment(
+                               GaugeSegment(
                                 from: 18.5,
-                                to: 24.9,
-                                color: Color(0xFFA3B426),
+                                to: 25.0,
+                                color: ColorTheme.gaugeColor2,
                                 cornerRadius: Radius.zero,
                               ),
-                              const GaugeSegment(
+                               GaugeSegment(
                                 from: 25.0,
-                                to: 29.9,
-                                color: Color(0xFFF7C700),
+                                to: 30.0,
+                                color: ColorTheme.gaugeColor3,
                                 cornerRadius: Radius.zero,
                               ),
-                              const GaugeSegment(
+                               GaugeSegment(
                                 from: 30.0,
-                                to: 34.9,
-                                color: Color(0xFFE88024),
+                                to: 35.0,
+                                color: ColorTheme.gaugeColor4,
                                 cornerRadius: Radius.zero,
                               ),
-                              const GaugeSegment(
+                               GaugeSegment(
                                 from: 35.0,
-                                to: 50,
-                                color: Color(0xFFE41B21),
+                                to: 40,
+                                color: ColorTheme.gaugeColor5,
                                 cornerRadius: Radius.zero,
                               ),
                             ],

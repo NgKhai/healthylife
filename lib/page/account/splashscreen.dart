@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:healthylife/page/account/login.dart';
 import 'package:healthylife/page/account/register.dart';
+import 'package:healthylife/util/color_theme.dart';
 
 class SplashScreenPage extends StatelessWidget{
   const SplashScreenPage({super.key});
@@ -11,7 +12,7 @@ class SplashScreenPage extends StatelessWidget{
     return Scaffold(
       body: Stack(
         children: [
-          const Positioned(
+          Positioned(
             top: 150,
             left: 0,
             right: 0,
@@ -19,7 +20,7 @@ class SplashScreenPage extends StatelessWidget{
               child: Text("HEALTHY LIFE",
                 style: TextStyle(
                   fontSize: 40,
-                  color: Color(0xFFDE5044),
+                  color: ColorTheme.backgroundColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -41,11 +42,11 @@ class SplashScreenPage extends StatelessWidget{
               //crossAxisAlignment: CrossAxisAlignment.end,
               children: <Widget>[
                 SizedBox(
-                  width: 300,
+                  width: MediaQuery.of(context).size.width * 5/6,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,  // màu nền của button
-                      foregroundColor: const Color(0xFFDE5044),  // màu chữ của button
+                      backgroundColor: ColorTheme.backgroundColor,  // màu nền của button
+                      foregroundColor: Colors.white,  // màu chữ của button
                       shape: RoundedRectangleBorder(  // border radius của button
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -63,11 +64,11 @@ class SplashScreenPage extends StatelessWidget{
                 ),
                 const SizedBox(height: 16,),
                 SizedBox(
-                  width: 300,
+                  width: MediaQuery.of(context).size.width * 5/6,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFFDE5044),
+                      foregroundColor: ColorTheme.backgroundColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

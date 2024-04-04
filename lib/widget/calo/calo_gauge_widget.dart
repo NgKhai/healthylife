@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gauge_indicator/gauge_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:healthylife/util/color_theme.dart';
 import 'package:intl/intl.dart';
 
 class CaloGaugeWidget extends StatefulWidget {
@@ -43,7 +44,7 @@ class _CaloGaugeWidgetState extends State<CaloGaugeWidget> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(15.0),
         child: Container(
-          color: const Color(0xFFDE5044),
+          color: ColorTheme.darkGreenColor,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [

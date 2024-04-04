@@ -9,6 +9,8 @@ import 'package:flutter/widgets.dart';
 import 'package:healthylife/widget/home/home_bottom_navigation.dart';
 import 'package:intl/intl.dart';
 
+import '../../util/color_theme.dart';
+
 
 class AddInfo extends StatefulWidget{
   const AddInfo({super.key});
@@ -671,7 +673,7 @@ class _AddInforState extends State<AddInfo>{
         padding: EdgeInsets.fromLTRB(18, 4, 18, 4),
         child: ElevatedButton(
           style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all(Colors.blueAccent.shade100),
+            backgroundColor: MaterialStateProperty.all(ColorTheme.backgroundColor),
             foregroundColor: MaterialStateProperty.all(Colors.white)
           ),
           onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation())); },

@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/widget/bmi/bmi_chart_widget.dart';
 import 'package:healthylife/widget/bmi/bmi_gauge_widget.dart';
 
+import '../../util/color_theme.dart';
+
 class BMIPage extends StatefulWidget {
   const BMIPage({super.key});
 
@@ -44,7 +46,7 @@ class _BMIPageState extends State<BMIPage> {
             ),
           ),
         ],
-        backgroundColor: const Color(0xFFDE5044),
+        backgroundColor: ColorTheme.lightGreenColor,
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(
@@ -189,7 +191,7 @@ class _BMIPageState extends State<BMIPage> {
           Icons.add,
           color: Colors.white,
         ),
-        backgroundColor: const Color(0xFFDE5044),
+        backgroundColor: ColorTheme.darkGreenColor,
         elevation: 4.0,
         splashColor: Colors.white,
         shape: RoundedRectangleBorder(

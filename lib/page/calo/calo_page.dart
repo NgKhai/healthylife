@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:healthylife/page/food_calo/food_calo.dart';
+import 'package:healthylife/page/home/home_page.dart';
+import 'package:healthylife/page/walking/walking_page.dart';
+import 'package:healthylife/util/color_theme.dart';
 import 'package:healthylife/widget/calo/calo_chart_widget.dart';
 import 'package:healthylife/widget/calo/calo_gauge_widget.dart';
 
@@ -44,7 +49,7 @@ class _CaloPageState extends State<CaloPage> {
             ),
           ),
         ],
-        backgroundColor: const Color(0xFFDE5044),
+        backgroundColor: ColorTheme.lightGreenColor,
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(
@@ -211,21 +216,47 @@ class _CaloPageState extends State<CaloPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add your onPressed action here
-        },
-        child: Icon(
-          Icons.add,
-          color: Colors.white,
-        ),
-        backgroundColor: const Color(0xFFDE5044),
-        elevation: 4.0,
-        splashColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-          side: BorderSide(color: Colors.white, width: 2.0),
-        ),
+      floatingActionButton: SpeedDial(
+        animatedIcon: AnimatedIcons.menu_close,
+        spacing: 10,
+        backgroundColor: ColorTheme.darkGreenColor,
+        foregroundColor: Colors.white,
+        spaceBetweenChildren: 10,
+        children: [
+          SpeedDialChild(
+            child: Icon(Icons.local_fire_department_outlined),
+            backgroundColor: ColorTheme.lightGreenColor,
+            foregroundColor: Colors.white,
+            labelBackgroundColor: ColorTheme.lightGreenColor,
+            label: 'Nạp calo',
+            labelStyle: GoogleFonts.getFont(
+              'Montserrat',
+              color: Colors.white,
+              fontWeight: FontWeight.normal,
+              fontSize: 20,
+            ),
+            onTap: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => FoodCaloPage()));
+            },
+          ),
+          SpeedDialChild(
+            child: Icon(Icons.directions_run_outlined),
+            backgroundColor: ColorTheme.gaugeColor1,
+            foregroundColor: Colors.white,
+            labelBackgroundColor: ColorTheme.gaugeColor1,
+            label: 'Tiêu calo',
+            labelStyle: GoogleFonts.getFont(
+              'Montserrat',
+              color: Colors.white,
+              fontWeight: FontWeight.normal,
+              fontSize: 20,
+            ),
+            onTap: () {
+              print('Nút này chưa có chạy được');
+            },
+          ),
+        ],
       ),
     );
   }

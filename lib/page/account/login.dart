@@ -5,6 +5,7 @@ import 'package:healthylife/page/account/register.dart';
 import 'package:healthylife/page/account/splashscreen.dart';
 import 'package:healthylife/page/add_info/addinfo.dart';
 import 'package:healthylife/page/auth.dart';
+import 'package:healthylife/util/color_theme.dart';
 
 class LoginPage extends StatefulWidget{
   const LoginPage ({super.key});
@@ -93,9 +94,9 @@ class _LoginState extends State<LoginPage>{
                   shape: const CircleBorder(),
                   //padding: const EdgeInsets.all(1),
                 ),
-                child: const Icon(Icons.arrow_back_rounded,
+                child: Icon(Icons.arrow_back_rounded,
                   size: 42,
-                  color: Color(0xFFDE5044),
+                  color: ColorTheme.backgroundColor,
                 ),
               ),
             ),
@@ -110,8 +111,8 @@ class _LoginState extends State<LoginPage>{
                     Container(
                       child: Center(
                         child: Text('Đăng nhập'.toUpperCase(),
-                          style: const TextStyle(
-                              color: Color(0xFFDE5044),
+                          style: TextStyle(
+                              color: ColorTheme.backgroundColor,
                               fontSize: 32,
                               fontWeight: FontWeight.bold
                           ),
@@ -178,12 +179,12 @@ class _LoginState extends State<LoginPage>{
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         GestureDetector(
-                          child: const Text('Quên mật khẩu?',
+                          child: Text('Quên mật khẩu?',
                             style: TextStyle(
                               decoration: TextDecoration.underline,
                               decorationThickness: 2.0,
-                              color: Color(0xFFDE5044),
-                              decorationColor: Color(0xFFDE5044),
+                              color: ColorTheme.backgroundColor,
+                              decorationColor: ColorTheme.backgroundColor,
                             ),
                           ),
                         ),
@@ -197,7 +198,7 @@ class _LoginState extends State<LoginPage>{
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.all(15),
-                          backgroundColor: Color(0xFFDE5044),
+                          backgroundColor: ColorTheme.backgroundColor,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -245,7 +246,7 @@ class _LoginState extends State<LoginPage>{
                         },
                         style: ButtonStyle(
                           padding: MaterialStateProperty.all(const EdgeInsets.all(16)),
-                          side: MaterialStateProperty.all(const BorderSide(width: 2,color: Color(0xFFDE5044))),
+                          side: MaterialStateProperty.all(BorderSide(width: 2,color: ColorTheme.backgroundColor)),
                           shape: MaterialStateProperty.all(
                             RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -253,10 +254,10 @@ class _LoginState extends State<LoginPage>{
                           ),
                         ),
                         child: Text('Đăng ký'.toUpperCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
-                            color: Color(0xFFDE5044),
+                            color: ColorTheme.backgroundColor,
                           ),
                         ),
                       ),

@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
+import 'package:healthylife/util/color_theme.dart';
 
 class FoodCaloPage extends StatefulWidget{
   const FoodCaloPage({super.key});
@@ -74,7 +75,7 @@ class _FoodCaloState extends State<FoodCaloPage>{
             fontWeight: FontWeight.bold,
             fontSize: 26
         ),
-        backgroundColor: Color(0xFFDE5044),
+        backgroundColor: ColorTheme.lightGreenColor,
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(40),
           child: Padding(

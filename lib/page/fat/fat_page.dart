@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:healthylife/util/color_theme.dart';
 import 'package:healthylife/widget/fat/fat_chart_widget.dart';
 import 'package:healthylife/widget/fat/fat_gauge_widget.dart';
 
@@ -44,7 +45,7 @@ class _FatPageState extends State<FatPage> {
             ),
           ),
         ],
-        backgroundColor: const Color(0xFFDE5044),
+        backgroundColor: ColorTheme.lightGreenColor,
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(
@@ -242,7 +243,7 @@ class _FatPageState extends State<FatPage> {
           Icons.add,
           color: Colors.white,
         ),
-        backgroundColor: const Color(0xFFDE5044),
+        backgroundColor: ColorTheme.darkGreenColor,
         elevation: 4.0,
         splashColor: Colors.white,
         shape: RoundedRectangleBorder(

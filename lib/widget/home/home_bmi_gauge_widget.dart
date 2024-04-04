@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gauge_indicator/gauge_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:healthylife/util/color_theme.dart';
 
 import '../../page/bmi/bmi_page.dart';
 
@@ -75,15 +76,15 @@ class _HomeBMIGaugeWidgetState extends State<HomeBMIGaugeWidget> {
                           radius: 70,
                           // Chỉnh độ to nhỏ của gauge
                           curve: Curves.elasticOut,
-                          axis: const GaugeAxis(
+                          axis: GaugeAxis(
                             min: 0,
-                            max: 50,
+                            max: 40,
                             degrees: 180,
                             pointer: GaugePointer.triangle(
                               width: 20,
                               height: 20,
                               borderRadius: 20 * 0.125,
-                              color: Color(0xFFDE5044),
+                              color: ColorTheme.darkGreenColor,
                               position:
                               GaugePointerPosition.surface(
                                 offset: Offset(0, 20 * 0.6),
@@ -102,7 +103,7 @@ class _HomeBMIGaugeWidgetState extends State<HomeBMIGaugeWidget> {
                               interval: Interval(0.0, 0.3),
                               background: Color(0xFFD9DEEB),
                             ),
-                            style: GaugeAxisStyle(
+                            style: const GaugeAxisStyle(
                               thickness: 20,
                               background: Colors.grey,
                               blendColors: false,
@@ -111,34 +112,34 @@ class _HomeBMIGaugeWidgetState extends State<HomeBMIGaugeWidget> {
                             ),
                             progressBar: null,
                             segments: [
-                              const GaugeSegment(
+                              GaugeSegment(
                                 from: 0,
-                                to: 18.4,
-                                color: Color(0xFF32B5EB),
+                                to: 18.5,
+                                color: ColorTheme.gaugeColor1,
                                 cornerRadius: Radius.zero,
                               ),
-                              const GaugeSegment(
+                              GaugeSegment(
                                 from: 18.5,
-                                to: 24.9,
-                                color: Color(0xFFA3B426),
+                                to: 25.0,
+                                color: ColorTheme.gaugeColor2,
                                 cornerRadius: Radius.zero,
                               ),
-                              const GaugeSegment(
+                              GaugeSegment(
                                 from: 25.0,
-                                to: 29.9,
-                                color: Color(0xFFF7C700),
+                                to: 30.0,
+                                color: ColorTheme.gaugeColor3,
                                 cornerRadius: Radius.zero,
                               ),
-                              const GaugeSegment(
+                              GaugeSegment(
                                 from: 30.0,
-                                to: 34.9,
-                                color: Color(0xFFE88024),
+                                to: 35.0,
+                                color: ColorTheme.gaugeColor4,
                                 cornerRadius: Radius.zero,
                               ),
-                              const GaugeSegment(
+                              GaugeSegment(
                                 from: 35.0,
-                                to: 50,
-                                color: Color(0xFFE41B21),
+                                to: 40,
+                                color: ColorTheme.gaugeColor5,
                                 cornerRadius: Radius.zero,
                               ),
                             ],
@@ -150,9 +151,9 @@ class _HomeBMIGaugeWidgetState extends State<HomeBMIGaugeWidget> {
                           textAlign: TextAlign.center,
                           style: GoogleFonts.getFont(
                             'Montserrat',
-                            color: const Color(0xFFDE5044),
+                            color: ColorTheme.darkGreenColor,
                             fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                            fontSize: 16,
                           ),
                         ),
                       ],
