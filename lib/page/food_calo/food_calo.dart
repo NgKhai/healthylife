@@ -73,6 +73,20 @@ class _FoodCaloState extends State<FoodCaloPage> {
     });
   }
 
+  // Hàm tìm kiếm Food theo tên
+  Future<void> searchFoodByName(String name) async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('Food')
+        .where('FoodName', isGreaterThanOrEqualTo: name)
+        .where('FoodName', isLessThanOrEqualTo: '$name\uf8ff')
+        .get();
+
+    setState(() {
+      foods = querySnapshot.docs.map((doc) => Food.fromFirestore(doc)).toList();
+    });
+  }
+
+
   void getFoodsForCategory(String categoryFood) async {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection('Food')
@@ -123,6 +137,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
                       onChanged: (value) {
                         // Khi nội dung thanh tìm kiếm thay đổi
                         // Thực hiện hành động tìm kiếm ở đây
+                        searchFoodByName(value);
                       },
                     ),
                   ),
@@ -218,7 +233,6 @@ class _FoodCaloState extends State<FoodCaloPage> {
                                 itemCount: foods.length,
                                 itemBuilder: (context, index) {
                                   return Container(
-                                      //height: 900,
                                       padding: const EdgeInsets.all(6),
                                       margin: const EdgeInsets.symmetric(
                                           vertical: 5),

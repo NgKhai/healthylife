@@ -3,11 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:healthylife/model/UserHealthy.dart';
 import 'package:healthylife/page/account/auth_page.dart';
 import 'package:healthylife/page/account/register.dart';
 import 'package:healthylife/page/account/splashscreen.dart';
 import 'package:healthylife/page/add_info/addinfo.dart';
 import 'package:healthylife/page/auth.dart';
+import 'package:healthylife/page/home/home_page.dart';
 import 'package:healthylife/util/color_theme.dart';
 import 'package:healthylife/util/snack_bar_error_mess.dart';
 
@@ -337,7 +339,15 @@ class _LoginState extends State<LoginPage>{
                       width: MediaQuery.of(context).size.width,
                       child: ElevatedButton(
                         onPressed: () {
-                          signInWithGoogle();
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(userHealthy: UserHealthy('lCIdlGoR2V2HPOEOFkF9', 'nguyenkhai1470@gmail.com', 'test123456', 'Nguyễn Khải', 'https://static.vecteezy.com/system/resources/previews/011/459/666/original/people-avatar-icon-png.png', DateTime.now()))));
+                          // signInWithGoogle();
+                          String timestamp = 'November 14, 2003 at 12:00:00 AM UTC+7';
+
+                          // Convert the timestamp to DateTime object
+                          DateTime birthday = DateTime.parse(timestamp);
+
+                          // Output the parsed date
+                          print('Birthday: $birthday');
                           //Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage()));
                         },
                         style: ButtonStyle(
