@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:healthylife/model/UserHealthy.dart';
 import 'package:healthylife/page/bmi/bmi_page.dart';
 import 'package:healthylife/page/calo/calo_page.dart';
 import 'package:healthylife/page/fat/fat_page.dart';
@@ -8,7 +9,9 @@ import 'package:healthylife/page/setting/setting_page.dart';
 import 'package:healthylife/page/walking/walking_page.dart';
 
 class HomeBottomNavigation extends StatefulWidget {
-  const HomeBottomNavigation({Key? key}) : super(key: key);
+
+  UserHealthy userHealthy;
+  HomeBottomNavigation({required this.userHealthy});
 
   @override
   State<HomeBottomNavigation> createState() => _HomeBottomNavigationState();
@@ -17,13 +20,26 @@ class HomeBottomNavigation extends StatefulWidget {
 class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
   int _currentIndex = 0;
   PageController _pageController = PageController();
+  late List<Widget> _pages;
 
-  final List<Widget> _pages = [
-    HomePage(),
-    FoodCaloPage(),
-    // WalkingPage(),
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    fetchData();
+
+  }
+
+
+  void fetchData() {
+    _pages = [
+    HomePage(userHealthy: widget.userHealthy),
+    // FoodCaloPage(),
+    WalkingPage(),
     SettingPage(),
-  ];
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {

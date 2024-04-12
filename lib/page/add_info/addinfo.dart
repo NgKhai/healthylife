@@ -1,15 +1,17 @@
 
 import 'dart:ui';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:healthylife/page/account/login.dart';
 import 'package:healthylife/widget/home/home_bottom_navigation.dart';
 import 'package:intl/intl.dart';
-
 import '../../util/color_theme.dart';
+import '../auth.dart';
 
 
 class AddInfo extends StatefulWidget{
@@ -20,6 +22,7 @@ class AddInfo extends StatefulWidget{
 }
 
 class _AddInforState extends State<AddInfo>{
+  final User? user = Auth().currentUser;
   String _name = '';
   bool isSelected = true;
   bool _state_1 = false;   // trạng thái của date
@@ -405,18 +408,21 @@ class _AddInforState extends State<AddInfo>{
                   ),
                 ),
               ),
-              Positioned(
-                top: MediaQuery.of(context).size.height * 0.03,
-                child: IconButton(
-                  icon: Icon(Icons.arrow_back_ios),
-                  onPressed: () {},
-                ),
-              ),
+              // Positioned(
+              //   top: MediaQuery.of(context).size.height * 0.03,
+              //   child: IconButton(
+              //     icon: Icon(Icons.arrow_back_ios),
+              //     onPressed: () {
+              //       Navigator.pop(context);
+              //       //Navigator.push(context, MaterialPageRoute(builder: (context)=>LoginPage()));
+              //     },
+              //   ),
+              // ),
               Positioned(
                 top: MediaQuery.of(context).size.height * 0.08,
                 left: MediaQuery.of(context).size.width * 0.05,
                 child:
-                const Text('Nhập thông tin',
+                Text(user?.email ?? 'Nhập thông tin',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -428,7 +434,7 @@ class _AddInforState extends State<AddInfo>{
                 left: MediaQuery.of(context).size.width * 0.05,
                 right: MediaQuery.of(context).size.width * 0,
                 child:
-                const Text('Vui lòng nhập thông tin chính xác để có báo cáo dữ liệu chính xác',
+                Text('Vui lòng nhập thông tin chính xác để có báo cáo dữ liệu chính xác',
                   style: TextStyle(
                       fontSize: 16
                   ),
@@ -676,7 +682,10 @@ class _AddInforState extends State<AddInfo>{
             backgroundColor: MaterialStateProperty.all(ColorTheme.backgroundColor),
             foregroundColor: MaterialStateProperty.all(Colors.white)
           ),
-          onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation())); },
+          onPressed: () {
+            Auth().singOut();
+            //Navigator.push(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation()));
+            },
           child: Text('Xác nhận',
             style: TextStyle(fontSize: 16),
           ),

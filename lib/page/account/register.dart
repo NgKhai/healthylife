@@ -1,6 +1,12 @@
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:healthylife/page/account/auth_page.dart';
 import 'package:healthylife/page/account/splashscreen.dart';
+import 'package:healthylife/page/add_info/addinfo.dart';
+import 'package:healthylife/page/auth.dart';
+import 'package:healthylife/util/color_theme.dart';
+import 'package:healthylife/util/snack_bar_error_mess.dart';
 
 class RegisterPage extends StatefulWidget{
   const RegisterPage ({super.key});
@@ -13,12 +19,49 @@ class _RegisterState extends State<RegisterPage>{
   String? errorMessage = '';
   bool isLogin = true;
   bool _obscureText = true;
-  final TextEditingController _controllerEmail = TextEditingController();
-  final TextEditingController _controllerPassword = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  Future<void> createUserWithEmailAndPassword() async{
+    showDialog(
+        context: context,
+        builder: (context){
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        });
+    try{
+      if(_emailController.text.isEmpty){
+        SnackBarErrorMess.show(context, 'Email không được bỏ trống');
+      } else if(_passwordController.text.isEmpty){
+        SnackBarErrorMess.show(context, 'Mật khẩu không được bỏ trống');
+      } else if(_confirmPasswordController.text.isEmpty){
+        SnackBarErrorMess.show(context, 'Nhập lại mật khẩu');
+      }
+      else if(_passwordController.text == _confirmPasswordController.text){
+        await Auth().createUserWithEmailAndPassword(
+            email: _emailController.text,
+            password: _passwordController.text);
+      } else{
+        SnackBarErrorMess.show(context, 'Mật khẩu không trùng nhau');
+      }
+      Navigator.pop(context);
+      //Navigator.push(context, MaterialPageRoute(builder: (context) => AddInfo()));
+    } on FirebaseAuthException catch(e){
+      //print("Error2: " + e.code.toString());
+      Navigator.pop(context);
+      if (e.code == 'weak-password') {
+        SnackBarErrorMess.show(context, 'Mật khẩu yếu');
+      } else if (e.code == 'email-already-in-use') {
+        SnackBarErrorMess.show(context, 'Email đã tồn tại');
+      }
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFDE5044),
+      backgroundColor: ColorTheme.backgroundColor,
       body: SingleChildScrollView(
         child: Stack(
           children: [
@@ -38,9 +81,9 @@ class _RegisterState extends State<RegisterPage>{
               left: 0,
               child: Center(
                 child: Text('Healthy life'.toUpperCase(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 40,
-                    color: Color(0xFFDE5044),
+                    color: ColorTheme.backgroundColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -55,7 +98,7 @@ class _RegisterState extends State<RegisterPage>{
                 },
                 style: ElevatedButton.styleFrom(
                     shape: const CircleBorder(),
-                    backgroundColor: const Color(0xFFDE5044)
+                    backgroundColor: ColorTheme.backgroundColor
                   //padding: const EdgeInsets.all(1),
                 ),
                 child: const Icon(Icons.arrow_back_rounded,
@@ -95,6 +138,7 @@ class _RegisterState extends State<RegisterPage>{
                             height: 16,
                           ),
                           TextFormField(
+                            controller: _emailController,
                             decoration: const InputDecoration(
                                 filled: true,
                                 //fillColor: ,
@@ -116,6 +160,7 @@ class _RegisterState extends State<RegisterPage>{
                             height: 16,
                           ),
                           TextFormField(
+                            controller: _passwordController,
                             obscureText: _obscureText,
                             decoration: const InputDecoration(
                                 filled: true,
@@ -138,6 +183,7 @@ class _RegisterState extends State<RegisterPage>{
                             height: 16,
                           ),
                           TextFormField(
+                            controller: _confirmPasswordController,
                             obscureText: _obscureText,
                             decoration: const InputDecoration(
                                 filled: true,
@@ -157,7 +203,7 @@ class _RegisterState extends State<RegisterPage>{
                                   controlAffinity: ListTileControlAffinity.leading,
                                   contentPadding: EdgeInsets.zero,
                                   activeColor: Colors.white,
-                                  checkColor: Color(0xFFDE5044),
+                                  checkColor: ColorTheme.backgroundColor,
                                   tileColor: Colors.transparent,
                                   title: const Text('Hiển thị mật khẩu',
                                     style: TextStyle(
@@ -177,10 +223,12 @@ class _RegisterState extends State<RegisterPage>{
                           SizedBox(
                             width: MediaQuery.of(context).size.width,
                             child: ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                createUserWithEmailAndPassword();
+                              },
                               style: ButtonStyle(
                                 padding: MaterialStateProperty.all(const EdgeInsets.all(16)),
-                                side: MaterialStateProperty.all(const BorderSide(width: 2,color: Color(0xFFDE5044))),
+                                side: MaterialStateProperty.all(BorderSide(width: 2,color: ColorTheme.backgroundColor)),
                                 shape: MaterialStateProperty.all(
                                   RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -188,10 +236,10 @@ class _RegisterState extends State<RegisterPage>{
                                 ),
                               ),
                               child: Text('Đăng ký'.toUpperCase(),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
-                                  color: Color(0xFFDE5044),
+                                  color: ColorTheme.backgroundColor,
                                 ),
                               ),
                             ),

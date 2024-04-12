@@ -1,5 +1,7 @@
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:healthylife/page/account/auth_page.dart';
 import 'package:healthylife/page/account/login.dart';
 import 'package:healthylife/page/account/register.dart';
 import 'package:healthylife/util/color_theme.dart';
@@ -18,7 +20,8 @@ class SplashScreenPage extends StatelessWidget{
             right: 0,
             child: Center(
               child: Text("HEALTHY LIFE",
-                style: TextStyle(
+                style: GoogleFonts.getFont(
+                  'Montserrat',
                   fontSize: 40,
                   color: ColorTheme.backgroundColor,
                   fontWeight: FontWeight.bold,
@@ -43,19 +46,23 @@ class SplashScreenPage extends StatelessWidget{
               children: <Widget>[
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 5/6,
+                  height: MediaQuery.of(context).size.width * 0.12,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ColorTheme.backgroundColor,  // màu nền của button
                       foregroundColor: Colors.white,  // màu chữ của button
                       shape: RoundedRectangleBorder(  // border radius của button
                         borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.white, width: 2),
+
                       ),
                     ),
                     onPressed: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage()));
                     },
                     child: Text('Đăng ký'.toUpperCase(),
-                      style: const TextStyle(
+                      style: GoogleFonts.getFont(
+                        'Montserrat',
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -65,6 +72,7 @@ class SplashScreenPage extends StatelessWidget{
                 const SizedBox(height: 16,),
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 5/6,
+                  height: MediaQuery.of(context).size.width * 0.12,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -74,10 +82,12 @@ class SplashScreenPage extends StatelessWidget{
                       ),
                     ),
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
+                      //Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => AuthPage()));
                     },
-                    child: Text('Đăng nhập'.toUpperCase(),
-                      style: const TextStyle(
+                    child:  Text('Đăng nhập'.toUpperCase(),
+                      style: GoogleFonts.getFont(
+                        'Montserrat',
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -93,8 +103,9 @@ class SplashScreenPage extends StatelessWidget{
                     //   //   MaterialPageRoute(builder: (context)),
                     //   // );
                     // },
-                    child: const Text('Đăng nhập không cần tài khoản',
-                      style: TextStyle(
+                    child: Text('Đăng nhập không cần tài khoản',
+                      style: GoogleFonts.getFont(
+                        'Montserrat',
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         decoration: TextDecoration.underline,

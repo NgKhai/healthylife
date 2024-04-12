@@ -9,11 +9,14 @@ import 'package:healthylife/widget/home/home_bmi_gauge_widget.dart';
 import 'package:healthylife/widget/home/home_fat_gauge_widget.dart';
 import 'package:intl/intl.dart';
 
+import '../../model/UserHealthy.dart';
 import '../../util/fat_gauge_check.dart';
 import '../../widget/home/home_calo_gauge_widget.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  UserHealthy userHealthy;
+
+  HomePage({required this.userHealthy});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -28,11 +31,11 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.only(top: 10, bottom: 10),
           child: CircleAvatar(
             backgroundImage: NetworkImage(
-                "https://cdn-icons-png.flaticon.com/512/147/147142.png"),
+                widget.userHealthy.UserAvatar),
           ),
         ),
         title: Text(
-          'Nguyễn Khải',
+          widget.userHealthy.UserName,
           style: GoogleFonts.getFont(
             'Montserrat',
             color: Colors.white,

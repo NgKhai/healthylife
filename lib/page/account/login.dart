@@ -1,11 +1,15 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:healthylife/page/account/auth_page.dart';
 import 'package:healthylife/page/account/register.dart';
 import 'package:healthylife/page/account/splashscreen.dart';
 import 'package:healthylife/page/add_info/addinfo.dart';
 import 'package:healthylife/page/auth.dart';
 import 'package:healthylife/util/color_theme.dart';
+import 'package:healthylife/util/snack_bar_error_mess.dart';
 
 class LoginPage extends StatefulWidget{
   const LoginPage ({super.key});
@@ -17,24 +21,72 @@ class LoginPage extends StatefulWidget{
 class _LoginState extends State<LoginPage>{
   bool _obscureText = true;
   bool _isInputEmpty = true;
-  bool isLogin = true;
-  String? errorMessage = '';
+  //bool isLogin = true;
+  //bool _showErrorMess = false;
+  //String? errorMessage = '';
 
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
   Future<void> signInWithEmailAndPassword() async{
+    showDialog(
+        context: context,
+        builder: (context){
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        });
     try{
-      await Auth().signInWithEmailAndPassword(
+      if(_emailController.text.isEmpty){
+        SnackBarErrorMess.show(context, 'Email không được bỏ trống');
+      } else if(_passwordController.text.isEmpty){
+        SnackBarErrorMess.show(context, 'Mật khẩu không được bỏ trống');
+      } else{
+        await Auth().signInWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
-      );
+        );
+      }
+      Navigator.pop(context);
+      //print('Login success');
     } on FirebaseAuthException catch(e){
-      setState(() {
-        errorMessage = e.message;
-      });
+      //print("Error1: " + e.code.toString());
+      Navigator.pop(context);
+      // Thông báo nếu email sai
+      if(e.code == 'invalid-email'){
+        SnackBarErrorMess.show(context, 'Email không tồn tại');
+      // Thông báo nếu mật khẩu sai
+      } else if(e.code == 'invalid-credential'){
+        SnackBarErrorMess.show(context, 'Mật khẩu không chính xác');
+      }
+
     }
+    //Navigator.push(context, MaterialPageRoute(builder: (context) => AuthPage()));
+    //Navigator.pop(context);
   }
+
+  Future<UserCredential?> signInWithGoogle() async{
+    final GoogleSignIn googleSignIn = GoogleSignIn(
+      scopes: [
+        'https://www.googleapis.com/auth/drive',
+      ],
+    );
+
+    // Lấy thông tin đăng nhập từ Google
+    final GoogleSignInAccount? googleSignInAccount = await googleSignIn.signIn();
+    // kiểm tra có thông tin đăng nhập không
+    if(googleSignInAccount != null){
+      final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount.authentication;
+      final OAuthCredential googleAuthCredential = GoogleAuthProvider.credential(
+        accessToken: googleSignInAuthentication.accessToken,
+        idToken:  googleSignInAuthentication.idToken,
+      );
+      UserCredential? userCredential = await FirebaseAuth.instance.signInWithCredential(googleAuthCredential);
+      return userCredential;
+    }
+    return null;
+  }
+
   void initState(){
     super.initState();
     _passwordController.addListener(_checkInput);
@@ -46,6 +98,16 @@ class _LoginState extends State<LoginPage>{
       _isInputEmpty = _passwordController.text.isEmpty;
     });
   }
+
+  void errorEmailMess() {
+    showDialog(
+        context: context,
+        builder: (context){
+          return const AlertDialog(
+            title: Text('Email không tồn tại'),
+          );
+        });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -68,13 +130,14 @@ class _LoginState extends State<LoginPage>{
               ),
             ),
 
-            const Positioned(
+             Positioned(
               top: 150,
               left: 0,
               right: 0,
               child: Center(
                 child: Text("HEALTHY LIFE",
-                  style: TextStyle(
+                  style: GoogleFonts.getFont(
+                    'Montserrat',
                     fontSize: 40,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -87,8 +150,8 @@ class _LoginState extends State<LoginPage>{
               left: -10,
               child: ElevatedButton(
                 onPressed: () {
-                  //Navigator.push(context, MaterialPageRoute(builder: (context) => SplashScreenPage()));
-                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => SplashScreenPage()));
+                  //Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
                   shape: const CircleBorder(),
@@ -111,25 +174,28 @@ class _LoginState extends State<LoginPage>{
                     Container(
                       child: Center(
                         child: Text('Đăng nhập'.toUpperCase(),
-                          style: TextStyle(
+                          style: GoogleFonts.getFont(
+                            'Montserrat',
                               color: ColorTheme.backgroundColor,
                               fontSize: 32,
                               fontWeight: FontWeight.bold
                           ),
                         ),
                       ),
-
                     ),
                     const SizedBox(
                       height: 16,
                     ),
-                    const Text('Email',
-                      style: TextStyle(
-                          color: Colors.grey
+                    Text('Email',
+                      style: GoogleFonts.getFont(
+                        'Montserrat',
+                        color: Colors.black,
+                        fontSize: 14,
                       ),
                     ),
                     const SizedBox(height: 10,),
                     TextFormField(
+                      controller: _emailController,
                       decoration: const InputDecoration(
                           filled: true,
                           border: OutlineInputBorder(
@@ -137,13 +203,27 @@ class _LoginState extends State<LoginPage>{
                           ),
                           contentPadding: EdgeInsets.symmetric(horizontal: 15)
                       ),
+                      validator: (value){
+                        if(value!.isEmpty){
+                          return 'Vui lòng nhập địa chỉ email';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(
                       height: 16,
                     ),
-                    const Text('Mật khẩu',
-                      style: TextStyle(
-                          color: Colors.grey
+                    // Hiển thị errorMessage
+                    //_buildErrorMessage(),
+                    // errorMessage != '' ? Text(errorMessage!,
+                    //   style: TextStyle(color: Colors.red),
+                    // ) : SizedBox(),
+
+                    Text('Mật khẩu',
+                      style: GoogleFonts.getFont(
+                        'Montserrat',
+                        color: Colors.black,
+                        fontSize: 14,
                       ),
                     ),
                     const SizedBox(
@@ -152,6 +232,12 @@ class _LoginState extends State<LoginPage>{
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscureText,
+                      validator: (value){
+                        if(value == null || value.isEmpty){
+                          return 'Vui lòng nhập thông tin';
+                        }
+                        return null;
+                      },
                       decoration: InputDecoration(
                           filled: true,
                           border: const OutlineInputBorder(
@@ -172,15 +258,21 @@ class _LoginState extends State<LoginPage>{
                           contentPadding: const EdgeInsets.symmetric(horizontal: 15)
                       ),
                     ),
+                    // Hiển thị errorMessage
+                    // errorMessage != '' ? Text(errorMessage!,
+                    //   style: TextStyle(color: Colors.red),
+                    // ) : SizedBox(),
                     const SizedBox(
                       height: 16,
                     ),
+                    //_buildErrorMessage(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         GestureDetector(
                           child: Text('Quên mật khẩu?',
-                            style: TextStyle(
+                            style: GoogleFonts.getFont(
+                              'Montserrat',
                               decoration: TextDecoration.underline,
                               decorationThickness: 2.0,
                               color: ColorTheme.backgroundColor,
@@ -205,10 +297,11 @@ class _LoginState extends State<LoginPage>{
                           ),
                         ),
                         onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => AddInfo()));
+                          signInWithEmailAndPassword();
                         },
                         child: Text('Đăng nhập'.toUpperCase(),
-                          style: const TextStyle(
+                          style: GoogleFonts.getFont(
+                            'Montserrat',
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -225,8 +318,10 @@ class _LoginState extends State<LoginPage>{
                             color: Colors.grey,
                           ),
                         ),
-                        const Text('Hoặc',
-                          style: TextStyle(color: Colors.grey),
+                        Text('Hoặc' .toUpperCase(),
+                          style: GoogleFonts.getFont(
+                              'Montserrat',
+                              color: Colors.grey),
                         ),
                         Expanded(
                           child: Container(
@@ -242,7 +337,8 @@ class _LoginState extends State<LoginPage>{
                       width: MediaQuery.of(context).size.width,
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage()));
+                          signInWithGoogle();
+                          //Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage()));
                         },
                         style: ButtonStyle(
                           padding: MaterialStateProperty.all(const EdgeInsets.all(16)),
@@ -253,13 +349,21 @@ class _LoginState extends State<LoginPage>{
                             ),
                           ),
                         ),
-                        child: Text('Đăng ký'.toUpperCase(),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: ColorTheme.backgroundColor,
-                          ),
-                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Image.asset('assets/images/google_img.png'),
+                            SizedBox(width: MediaQuery.of(context).size.width * 0.06),
+                            Text('Đăng nhập bằng Google'.toUpperCase(),
+                              style: GoogleFonts.getFont(
+                                'Montserrat',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: ColorTheme.backgroundColor,
+                              ),
+                            ),
+                          ],
+                        )
                       ),
                     ),
                   ],

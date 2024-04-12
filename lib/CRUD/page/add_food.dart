@@ -260,6 +260,8 @@ class _AddFoodState extends State<AddFood> {
                   'FoodCategory3',
                   'FoodCategory4',
                   'FoodCategory5',
+                  'FoodCategory6',
+                  'FoodCategory7',
                 ].map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
