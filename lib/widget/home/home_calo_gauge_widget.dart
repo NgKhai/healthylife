@@ -120,7 +120,7 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
                                 background: Color(0xFFD9DEEB),
                               ),
                               style: GaugeAxisStyle(
-                                thickness: 10,
+                                thickness: 15,
                                 background: Colors.grey,
                                 blendColors: false,
                                 cornerRadius: Radius.circular(0.0),

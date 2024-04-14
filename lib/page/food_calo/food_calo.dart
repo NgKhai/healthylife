@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:healthylife/model/CaloHistory.dart';
 import 'package:healthylife/page/calo/calo_page.dart';
 import 'package:healthylife/util/color_theme.dart';
 import 'package:healthylife/widget/food_calo/food_calo_widget.dart';
+import 'package:intl/intl.dart';
 
 import '../../model/Food.dart';
 import '../../model/FoodCategory.dart';
@@ -20,14 +22,19 @@ class FoodCaloPage extends StatefulWidget {
 class _FoodCaloState extends State<FoodCaloPage> {
   int _selectIndex = 0;
 
-  // bool _selectState = false;
   bool _isLoading = false;
 
   late List<FoodCategory> categories = [];
   late List<Food> foods = [];
   late List<bool> _selectStates = [];
 
+  late List<Food> filteredFoods = [];
+
+  late List<String> foodHistoryList = [];
+
   num value = 0;
+
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -46,9 +53,15 @@ class _FoodCaloState extends State<FoodCaloPage> {
     await getFoodCategory();
     await getFood();
     _selectStates = List.generate(foods.length, (index) => false);
+
     setState(() {
       _isLoading = false;
     });
+
+    _searchController.clear();
+
+    _selectIndex = 0;
+    value = 0;
   }
 
   // hàm lấy dữ liệu loại thức ăn từ firebase
@@ -66,26 +79,22 @@ class _FoodCaloState extends State<FoodCaloPage> {
   Future<void> getFood() async {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection('Food')
-        .orderBy("FoodName")
+        // .orderBy("FoodName")
         .get();
     setState(() {
       foods = querySnapshot.docs.map((doc) => Food.fromFirestore(doc)).toList();
     });
   }
 
-  // Hàm tìm kiếm Food theo tên
   Future<void> searchFoodByName(String name) async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-        .collection('Food')
-        .where('FoodName', isGreaterThanOrEqualTo: name)
-        .where('FoodName', isLessThanOrEqualTo: '$name\uf8ff')
-        .get();
-
     setState(() {
-      foods = querySnapshot.docs.map((doc) => Food.fromFirestore(doc)).toList();
+      filteredFoods = foods
+          .where((food) =>
+              food.FoodName.toLowerCase().contains(name.toLowerCase()))
+          .toList();
+      _selectStates = List.generate(filteredFoods.length, (index) => false);
     });
   }
-
 
   void getFoodsForCategory(String categoryFood) async {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
@@ -97,15 +106,79 @@ class _FoodCaloState extends State<FoodCaloPage> {
     });
   }
 
+  Future<void> addCaloHistory(List<String> foodHistory) async {
+    try {
+
+      DateTime now = DateTime.now();
+      String formattedDate = DateFormat('dd/MM/yyyy').format(now);
+
+      final caloHistoryCollection =
+          FirebaseFirestore.instance.collection('CaloHistory');
+
+      final querySnapshot = await caloHistoryCollection
+          .where('UserID', isEqualTo: 'lCIdlGoR2V2HPOEOFkF9')
+          .where('DateHistory', isEqualTo: formattedDate)
+          .get();
+
+      if(querySnapshot.docs.isNotEmpty) {
+        final document = querySnapshot.docs.first;
+
+        CaloHistory caloHistory = CaloHistory(document.id, 'lCIdlGoR2V2HPOEOFkF9', formattedDate, foodHistoryList);
+
+        final existingFoodHistory = List<String>.from(document.data()['FoodID'] ?? []);
+
+        existingFoodHistory.addAll(foodHistoryList);
+
+        // await caloHistoryCollection.doc(document.id).update({
+        //   'FoodHistory': existingFoodHistory.map((food) => food.toJson()).toList(),
+        // });
+
+        await caloHistoryCollection
+            .doc(document.id)
+            .update({
+          'FoodID': existingFoodHistory,
+        })
+            .then((value) {
+          print("Calo history update\nUID:${caloHistory.CaloHistoryID}");
+          Navigator.pop(context);
+        }).catchError((error) => print("Failed to update calo history: $error"));
+
+      } else {
+        final uid = caloHistoryCollection.doc().id;
+
+        CaloHistory caloHistory = CaloHistory(uid, 'lCIdlGoR2V2HPOEOFkF9', formattedDate, foodHistory);
+
+        await caloHistoryCollection
+            .doc(caloHistory.CaloHistoryID)
+            .set(caloHistory.toJson())
+            .then((value) {
+          print("Calo history Added\nUID:${caloHistory.CaloHistoryID}");
+          Navigator.pop(context);
+        }).catchError((error) => print("Failed to add calo history: $error"));
+      }
+
+
+    } on Exception catch (e) {
+      print(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          color: Colors.white,
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text('Món ăn của bạn'),
         titleTextStyle: GoogleFonts.getFont(
           'Montserrat',
           fontWeight: FontWeight.bold,
-          fontSize: 26,
+          fontSize: 24,
         ),
         backgroundColor: ColorTheme.lightGreenColor,
         bottom: PreferredSize(
@@ -117,6 +190,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
                 children: [
                   Expanded(
                     child: TextField(
+                      controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Tìm kiếm...',
                         hintStyle: GoogleFonts.getFont(
@@ -225,82 +299,9 @@ class _FoodCaloState extends State<FoodCaloPage> {
                     Expanded(
                       child: Stack(
                         children: [
-                          Container(
-                            height: MediaQuery.of(context).size.height,
-                            padding: EdgeInsets.all(6),
-                            alignment: Alignment.center,
-                            child: ListView.builder(
-                                itemCount: foods.length,
-                                itemBuilder: (context, index) {
-                                  return Container(
-                                      padding: const EdgeInsets.all(6),
-                                      margin: const EdgeInsets.symmetric(
-                                          vertical: 5),
-                                      decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(15)),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Image.network(
-                                            width: 50,
-                                            height: 50,
-                                            foods[index].FoodImage ?? "",
-                                            errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    const Icon(Icons.image),
-                                          ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                foods[index].FoodName ?? "",
-                                                style: GoogleFonts.getFont(
-                                                    'Montserrat',
-                                                    fontSize: 16,
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                              ),
-                                              Text(
-                                                "100g - ${foods[index].FoodCalo} calo",
-                                                style: GoogleFonts.getFont(
-                                                  'Montserrat',
-                                                  fontSize: 16,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          IconButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                _selectStates[index] =
-                                                    !_selectStates[
-                                                        index]; // chuyển đồi trạng thái khi chọn icon
-                                                value += !_selectStates[index]
-                                                    ? -foods[index].FoodCalo
-                                                    : foods[index].FoodCalo;
-                                              });
-                                              print(
-                                                  "Value: " + value.toString());
-                                            },
-                                            icon: Icon(
-                                              _selectStates[index]
-                                                  ? Icons.check_circle_rounded
-                                                  : Icons.add_circle_outline,
-                                              color: _selectStates[index]
-                                                  ? Colors.green
-                                                  : Colors.grey,
-                                              size: 30,
-                                            ),
-                                          ),
-                                        ],
-                                      ));
-                                }),
-                          ),
+                          _searchController.text.isEmpty
+                              ? listItem(foods)
+                              : listItem(filteredFoods),
                           if (isChecked())
                             Padding(
                               padding: EdgeInsets.only(
@@ -309,7 +310,8 @@ class _FoodCaloState extends State<FoodCaloPage> {
                               child: Align(
                                 alignment: Alignment.bottomCenter,
                                 child: SizedBox(
-                                  width: MediaQuery.of(context).size.width * 1/2,
+                                  width:
+                                      MediaQuery.of(context).size.width * 2 / 3,
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
                                       padding: EdgeInsets.all(15),
@@ -321,14 +323,15 @@ class _FoodCaloState extends State<FoodCaloPage> {
                                       ),
                                     ),
                                     onPressed: () {
-                                      Navigator.pop(context);
+                                      addCaloHistory(foodHistoryList);
                                     },
                                     child: Text(
-                                      'Thêm ngay'.toUpperCase(),
+                                      'Thêm ngay - $value calo',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 14,
+                                        fontSize: 16,
                                       ),
+                                      textAlign: TextAlign.center,
                                     ),
                                   ),
                                 ),
@@ -342,5 +345,80 @@ class _FoodCaloState extends State<FoodCaloPage> {
               ),
             ),
     );
+  }
+
+  Widget listItem(List<Food> foods) {
+    return Container(
+        height: MediaQuery.of(context).size.height,
+        padding: EdgeInsets.all(6),
+        alignment: Alignment.center,
+        child: ListView.builder(
+            itemCount: foods.length,
+            itemBuilder: (context, index) {
+              return Container(
+                  padding: const EdgeInsets.all(6),
+                  margin: const EdgeInsets.symmetric(vertical: 5),
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Image.network(
+                        width: 50,
+                        height: 50,
+                        foods[index].FoodImage ?? "",
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.image),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            foods[index].FoodName ?? "",
+                            style: GoogleFonts.getFont('Montserrat',
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            "100g - ${foods[index].FoodCalo} calo",
+                            style: GoogleFonts.getFont(
+                              'Montserrat',
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            print(_selectStates[index]);
+                            _selectStates[index] = !_selectStates[
+                                index]; // chuyển đồi trạng thái khi chọn icon
+
+                            value += !_selectStates[index]
+                                ? -foods[index].FoodCalo
+                                : foods[index].FoodCalo;
+
+                            _selectStates[index] ? foodHistoryList.add(foods[index].FoodID) : foodHistoryList.removeAt(index);
+
+                            print(_selectStates[index]);
+                            // print()
+                            print(foodHistoryList);
+                          });
+                          print("Value: " + value.toString());
+                        },
+                        icon: Icon(
+                          _selectStates[index]
+                              ? Icons.check_circle_rounded
+                              : Icons.add_circle_outline,
+                          color:
+                              _selectStates[index] ? Colors.green : Colors.grey,
+                          size: 30,
+                        ),
+                      ),
+                    ],
+                  ));
+            }));
   }
 }

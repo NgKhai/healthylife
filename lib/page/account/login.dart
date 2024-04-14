@@ -12,6 +12,7 @@ import 'package:healthylife/page/auth.dart';
 import 'package:healthylife/page/home/home_page.dart';
 import 'package:healthylife/util/color_theme.dart';
 import 'package:healthylife/util/snack_bar_error_mess.dart';
+import 'package:healthylife/widget/home/home_bottom_navigation.dart';
 
 class LoginPage extends StatefulWidget{
   const LoginPage ({super.key});
@@ -299,7 +300,8 @@ class _LoginState extends State<LoginPage>{
                           ),
                         ),
                         onPressed: () {
-                          signInWithEmailAndPassword();
+                          // signInWithEmailAndPassword();
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation(userHealthy: UserHealthy('lCIdlGoR2V2HPOEOFkF9', 'nguyenkhai1470@gmail.com', 'test123456', 'Nguyễn Khải', 'https://static.vecteezy.com/system/resources/previews/011/459/666/original/people-avatar-icon-png.png', DateTime.now()))));
                         },
                         child: Text('Đăng nhập'.toUpperCase(),
                           style: GoogleFonts.getFont(
@@ -339,15 +341,8 @@ class _LoginState extends State<LoginPage>{
                       width: MediaQuery.of(context).size.width,
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(userHealthy: UserHealthy('lCIdlGoR2V2HPOEOFkF9', 'nguyenkhai1470@gmail.com', 'test123456', 'Nguyễn Khải', 'https://static.vecteezy.com/system/resources/previews/011/459/666/original/people-avatar-icon-png.png', DateTime.now()))));
-                          // signInWithGoogle();
-                          String timestamp = 'November 14, 2003 at 12:00:00 AM UTC+7';
 
-                          // Convert the timestamp to DateTime object
-                          DateTime birthday = DateTime.parse(timestamp);
-
-                          // Output the parsed date
-                          print('Birthday: $birthday');
+                          signInWithGoogle();
                           //Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage()));
                         },
                         style: ButtonStyle(
