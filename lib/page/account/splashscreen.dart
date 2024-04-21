@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/page/account/auth_page.dart';
 import 'package:healthylife/page/account/login.dart';
+import 'package:healthylife/page/account/login_number_phone.dart';
 import 'package:healthylife/page/account/register.dart';
 import 'package:healthylife/util/color_theme.dart';
 
@@ -86,6 +87,30 @@ class SplashScreenPage extends StatelessWidget{
                       Navigator.push(context, MaterialPageRoute(builder: (context) => AuthPage()));
                     },
                     child:  Text('Đăng nhập'.toUpperCase(),
+                      style: GoogleFonts.getFont(
+                        'Montserrat',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 5/6,
+                  height: MediaQuery.of(context).size.width * 0.12,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: ColorTheme.backgroundColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => LoginWithNumberPhone()));
+                    },
+                    child:  Text('Đăng nhập bằng số điện thoại'.toUpperCase(),
                       style: GoogleFonts.getFont(
                         'Montserrat',
                         fontWeight: FontWeight.bold,

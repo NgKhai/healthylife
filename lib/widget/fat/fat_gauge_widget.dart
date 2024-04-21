@@ -115,6 +115,9 @@ class _FatGaugeWidgetState extends State<FatGaugeWidget> {
                         AnimatedRadialGauge(
                           duration: const Duration(milliseconds: 2000),
                           builder: (context, _, value) => RadialGaugeLabel(
+                            labelProvider:
+                            const GaugeLabelProvider.value(
+                                fractionDigits: 1),
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 40,
@@ -130,7 +133,7 @@ class _FatGaugeWidgetState extends State<FatGaugeWidget> {
                             min: 0,
                             max: 45,
                             degrees: 180,
-                            pointer: const GaugePointer.triangle(
+                            pointer: GaugePointer.triangle(
                               width: 35,
                               height: 35,
                               borderRadius: 35 * 0.125,
@@ -139,7 +142,7 @@ class _FatGaugeWidgetState extends State<FatGaugeWidget> {
                                 offset: Offset(0, 35 * 0.6),
                               ),
                               border: GaugePointerBorder(
-                                color: Color(0xFFDE5044),
+                                color: ColorTheme.darkGreenColor,
                                 width: 35 * 0.125,
                               ),
                             ),

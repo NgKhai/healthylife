@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:healthylife/model/UserHealthy.dart';
 import 'package:healthylife/page/account/login.dart';
 import 'package:healthylife/widget/home/home_bottom_navigation.dart';
 import 'package:intl/intl.dart';
@@ -683,8 +684,11 @@ class _AddInforState extends State<AddInfo>{
             foregroundColor: MaterialStateProperty.all(Colors.white)
           ),
           onPressed: () {
-            Auth().singOut();
-            //Navigator.push(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation()));
+            // Auth().singOut();
+
+
+
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation(userHealthy: UserHealthy('lCIdlGoR2V2HPOEOFkF9', 'nguyenkhai1470@gmail.com', 'test123456', 'Nguyễn Khải', 'https://static.vecteezy.com/system/resources/previews/011/459/666/original/people-avatar-icon-png.png', DateTime.now()))));
             },
           child: Text('Xác nhận',
             style: TextStyle(fontSize: 16),

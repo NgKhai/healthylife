@@ -1,19 +1,82 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gauge_indicator/gauge_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/util/color_theme.dart';
+import 'package:intl/intl.dart';
 
 import '../../page/calo/calo_page.dart';
 
 class HomeCaloGaugeWidget extends StatefulWidget {
-  const HomeCaloGaugeWidget({super.key});
+  String userID;
+  HomeCaloGaugeWidget({super.key, required this.userID});
 
   @override
   State<HomeCaloGaugeWidget> createState() => _HomeCaloGaugeWidgetState();
 }
 
 class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
+
+  num _userCalo = 0;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+
+    setState(() {
+
+    });
+
+    // Lấy dữ liệu từ Food History
+    await getUserDetail(widget.userID);
+
+
+  }
+
+  // Hàm lấy dữ liệu CaloHistory
+  Future<void> getUserDetail(String userID) async {
+    try {
+
+      // lấy dữ liệu CaloHistory thông qua userID và date history
+      String dateHistory = DateFormat('dd/MM/yyyy').format(DateTime.now());
+
+      final caloHistoryQuerySnapshot = await FirebaseFirestore.instance
+          .collection('UserDetail')
+          .where('UserID', isEqualTo: userID)
+          .where('DateHistory', isEqualTo: dateHistory)
+          .get();
+
+      // Nếu dữ liệu tồn tại
+      if (caloHistoryQuerySnapshot.docs.isNotEmpty) {
+
+        // lấy id document
+        final document = caloHistoryQuerySnapshot.docs.first;
+
+
+
+        num userCalo = document.data()['UserCalo'];
+        print("User calo: " + userCalo.toString());
+        print(userCalo.toDouble());
+
+        setState(() {
+          _userCalo = userCalo;
+        });
+
+      } else {
+        print('lỗi');
+      }
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -101,7 +164,7 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
                                   ),
                                   value: 1500 - value,
                                 ),
-                            value: 110,
+                            value: _userCalo.toDouble(),
                             radius: 60,
                             // Chỉnh độ to nhỏ của gauge
                             curve: Curves.elasticOut,

@@ -12,6 +12,9 @@ import 'package:intl/intl.dart';
 import '../../model/UserHealthy.dart';
 import '../../util/fat_gauge_check.dart';
 import '../../widget/home/home_calo_gauge_widget.dart';
+import '../exercise/exercise_page.dart';
+
+import '../home/test.dart';
 
 class HomePage extends StatefulWidget {
   UserHealthy userHealthy;
@@ -23,6 +26,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
+  void refresh() {
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,7 +86,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-              HomeCaloGaugeWidget(),
+              HomeCaloGaugeWidget(userID: widget.userHealthy.UserID),
               SizedBox(height: MediaQuery.of(context).size.height * 0.025),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -174,7 +182,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   Expanded(
                     child: InkWell(
-                      onTap: () {},
+                      onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => ExercisePage()));},
                       child: Text(
                         'Xem tất cả',
                         textAlign: TextAlign.end,

@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/model/CaloHistory.dart';
 import 'package:healthylife/page/calo/calo_page.dart';
 import 'package:healthylife/util/color_theme.dart';
+import 'package:healthylife/widget/calo/calo_chart_widget.dart';
+import 'package:healthylife/widget/calo/calo_gauge_widget.dart';
 import 'package:healthylife/widget/food_calo/food_calo_widget.dart';
 import 'package:intl/intl.dart';
 
@@ -108,56 +110,51 @@ class _FoodCaloState extends State<FoodCaloPage> {
 
   Future<void> addCaloHistory(List<String> foodHistory) async {
     try {
-
       DateTime now = DateTime.now();
-      String formattedDate = DateFormat('dd/MM/yyyy').format(now);
+      String dateHistory = DateFormat('dd/MM/yyyy').format(now);
 
       final caloHistoryCollection =
           FirebaseFirestore.instance.collection('CaloHistory');
 
       final querySnapshot = await caloHistoryCollection
           .where('UserID', isEqualTo: 'lCIdlGoR2V2HPOEOFkF9')
-          .where('DateHistory', isEqualTo: formattedDate)
+          .where('DateHistory', isEqualTo: dateHistory)
           .get();
 
-      if(querySnapshot.docs.isNotEmpty) {
+      if (querySnapshot.docs.isNotEmpty) {
         final document = querySnapshot.docs.first;
 
-        CaloHistory caloHistory = CaloHistory(document.id, 'lCIdlGoR2V2HPOEOFkF9', formattedDate, foodHistoryList);
+        CaloHistory caloHistory = CaloHistory(document.id,
+            'lCIdlGoR2V2HPOEOFkF9', dateHistory, foodHistoryList);
 
-        final existingFoodHistory = List<String>.from(document.data()['FoodID'] ?? []);
+        final existingFoodHistory =
+            List<String>.from(document.data()['FoodID'] ?? []);
 
         existingFoodHistory.addAll(foodHistoryList);
 
-        // await caloHistoryCollection.doc(document.id).update({
-        //   'FoodHistory': existingFoodHistory.map((food) => food.toJson()).toList(),
-        // });
-
-        await caloHistoryCollection
-            .doc(document.id)
-            .update({
+        await caloHistoryCollection.doc(document.id).update({
           'FoodID': existingFoodHistory,
-        })
-            .then((value) {
+        }).then((value) {
           print("Calo history update\nUID:${caloHistory.CaloHistoryID}");
+          // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CaloPage()));
           Navigator.pop(context);
-        }).catchError((error) => print("Failed to update calo history: $error"));
-
+        }).catchError(
+            (error) => print("Failed to update calo history: $error"));
       } else {
         final uid = caloHistoryCollection.doc().id;
 
-        CaloHistory caloHistory = CaloHistory(uid, 'lCIdlGoR2V2HPOEOFkF9', formattedDate, foodHistory);
+        CaloHistory caloHistory = CaloHistory(
+            uid, 'lCIdlGoR2V2HPOEOFkF9', dateHistory, foodHistory);
 
         await caloHistoryCollection
             .doc(caloHistory.CaloHistoryID)
             .set(caloHistory.toJson())
             .then((value) {
           print("Calo history Added\nUID:${caloHistory.CaloHistoryID}");
+          //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CaloPage()));
           Navigator.pop(context);
         }).catchError((error) => print("Failed to add calo history: $error"));
       }
-
-
     } on Exception catch (e) {
       print(e);
     }
@@ -192,6 +189,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
+                        isDense: true,
                         hintText: 'Tìm kiếm...',
                         hintStyle: GoogleFonts.getFont(
                           'Montserrat',
@@ -207,6 +205,13 @@ class _FoodCaloState extends State<FoodCaloPage> {
                         ),
                         contentPadding: EdgeInsets.zero,
                         prefixIcon: Icon(Icons.search),
+                        suffixIcon: _searchController.text.isEmpty
+                            ? null
+                            : IconButton(
+                                splashColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onPressed: _searchController.clear,
+                                icon: Icon(CupertinoIcons.clear_circled_solid)),
                       ),
                       onChanged: (value) {
                         // Khi nội dung thanh tìm kiếm thay đổi
@@ -371,23 +376,30 @@ class _FoodCaloState extends State<FoodCaloPage> {
                         errorBuilder: (context, error, stackTrace) =>
                             const Icon(Icons.image),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            foods[index].FoodName ?? "",
-                            style: GoogleFonts.getFont('Montserrat',
-                                fontSize: 16, fontWeight: FontWeight.bold),
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal:
+                                  MediaQuery.sizeOf(context).width * 0.1),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                foods[index].FoodName ?? "",
+                                style: GoogleFonts.getFont('Montserrat',
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "100g - ${foods[index].FoodCalo} calo",
+                                style: GoogleFonts.getFont(
+                                  'Montserrat',
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            "100g - ${foods[index].FoodCalo} calo",
-                            style: GoogleFonts.getFont(
-                              'Montserrat',
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                       IconButton(
                         onPressed: () {
@@ -400,7 +412,9 @@ class _FoodCaloState extends State<FoodCaloPage> {
                                 ? -foods[index].FoodCalo
                                 : foods[index].FoodCalo;
 
-                            _selectStates[index] ? foodHistoryList.add(foods[index].FoodID) : foodHistoryList.removeAt(index);
+                            _selectStates[index]
+                                ? foodHistoryList.add(foods[index].FoodID)
+                                : foodHistoryList.remove(foods[index].FoodID);
 
                             print(_selectStates[index]);
                             // print()

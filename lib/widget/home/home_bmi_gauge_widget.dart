@@ -6,6 +6,7 @@ import 'package:healthylife/util/color_theme.dart';
 import '../../page/bmi/bmi_page.dart';
 
 class HomeBMIGaugeWidget extends StatefulWidget {
+
   const HomeBMIGaugeWidget({super.key});
 
   @override
@@ -13,6 +14,13 @@ class HomeBMIGaugeWidget extends StatefulWidget {
 }
 
 class _HomeBMIGaugeWidgetState extends State<HomeBMIGaugeWidget> {
+
+  Future<void> fetchData() async {
+
+    print('Fetch data Home BMI Gauge');
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
