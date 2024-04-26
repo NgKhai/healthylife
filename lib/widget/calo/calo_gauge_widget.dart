@@ -1,9 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gauge_indicator/gauge_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/util/color_theme.dart';
 import 'package:healthylife/widget/calo/calo_history_widget.dart';
 import 'package:intl/intl.dart';
+
+import '../../model/CaloHistory.dart';
 
 class CaloGaugeWidget extends StatefulWidget {
   String userID;
@@ -15,6 +18,10 @@ class CaloGaugeWidget extends StatefulWidget {
 }
 
 class _CaloGaugeWidgetState extends State<CaloGaugeWidget> {
+
+  num exercise_calo = 0;
+  num food_calo = 0;
+
   DateTime _selectedDate = DateTime.now();
 
   Future<void> _selectDate(BuildContext context) async {
@@ -64,6 +71,7 @@ class _CaloGaugeWidgetState extends State<CaloGaugeWidget> {
       return '${difference} ngày sau';
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -257,8 +265,8 @@ class _CaloGaugeWidgetState extends State<CaloGaugeWidget> {
         SizedBox(
           height: MediaQuery.of(context).size.height * 0.02,
         ),
-        CaloHistoryWidget(
-            userID: widget.userID, dateHistory: getDate(_selectedDate)),
+        // CaloHistoryWidget(
+        //     userID: widget.userID, dateHistory: getDate(_selectedDate)),
       ],
     );
   }

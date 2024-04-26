@@ -58,6 +58,7 @@ dependencies:
   provider: ^6.1.2
   firebase_app_check: ^0.2.2+1
   country_picker: ^2.0.25
+  input_quantity: ^2.3.2
 
 dev_dependencies:
   flutter_test:

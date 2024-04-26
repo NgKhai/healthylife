@@ -70,7 +70,8 @@ class _CaloPageState extends State<CaloPage> {
         ),
         child: Column(
           children: [
-            CaloGaugeWidget(userID: 'lCIdlGoR2V2HPOEOFkF9'),
+            // CaloGaugeWidget(userID: 'lCIdlGoR2V2HPOEOFkF9'),
+            CaloHistoryWidget(userID: 'lCIdlGoR2V2HPOEOFkF9'),
             SizedBox(height: MediaQuery.of(context).size.height * 0.02),
             ListView(
               shrinkWrap: true,
@@ -217,7 +218,7 @@ class _CaloPageState extends State<CaloPage> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                CaloChartWidget(),
+                CaloChartWidget(userID: 'lCIdlGoR2V2HPOEOFkF9'),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.2),
               ],
             ),

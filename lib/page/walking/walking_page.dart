@@ -155,6 +155,10 @@ class _WalkingPageState extends State<WalkingPage> {
   bool isTracking = false;
   double speed = 0.0; // Movement speed in m/s
 
+  void clearTrackingData() {
+    positions.clear();
+    _stopTracking();
+  }
 
   Future<void> _getCurrentLocation() async {
     final locationData = await Geolocator.getCurrentPosition(
@@ -251,7 +255,7 @@ class _WalkingPageState extends State<WalkingPage> {
               mapController: _mapController,
               options: MapOptions(
                 center: LatLng(10.776183323564736, 106.66732187988492),
-                zoom: 16,
+                zoom: 26,
               ),
               children: [
                 TileLayer(

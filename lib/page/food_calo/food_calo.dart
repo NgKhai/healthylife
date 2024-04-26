@@ -1,18 +1,14 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/model/CaloHistory.dart';
-import 'package:healthylife/page/calo/calo_page.dart';
 import 'package:healthylife/util/color_theme.dart';
-import 'package:healthylife/widget/calo/calo_chart_widget.dart';
-import 'package:healthylife/widget/calo/calo_gauge_widget.dart';
-import 'package:healthylife/widget/food_calo/food_calo_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:input_quantity/input_quantity.dart';
 
 import '../../model/Food.dart';
 import '../../model/FoodCategory.dart';
+import '../../util/snack_bar_error_mess.dart';
 
 class FoodCaloPage extends StatefulWidget {
   const FoodCaloPage({super.key});
@@ -32,11 +28,15 @@ class _FoodCaloState extends State<FoodCaloPage> {
 
   late List<Food> filteredFoods = [];
 
-  late List<String> foodHistoryList = [];
+  late List<FoodDetailHistory> foodHistoryList = [];
+
+  late List<ExerciseDetailHistory> exerciseHistoryList = [];
 
   num value = 0;
 
-  TextEditingController _searchController = TextEditingController();
+  int defaultNetWeight = 100;
+
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -108,7 +108,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
     });
   }
 
-  Future<void> addCaloHistory(List<String> foodHistory) async {
+  Future<void> addCaloHistory(List<FoodDetailHistory> foodHistory) async {
     try {
       DateTime now = DateTime.now();
       String dateHistory = DateFormat('dd/MM/yyyy').format(now);
@@ -124,16 +124,23 @@ class _FoodCaloState extends State<FoodCaloPage> {
       if (querySnapshot.docs.isNotEmpty) {
         final document = querySnapshot.docs.first;
 
-        CaloHistory caloHistory = CaloHistory(document.id,
-            'lCIdlGoR2V2HPOEOFkF9', dateHistory, foodHistoryList);
+        CaloHistory caloHistory = CaloHistory(
+            document.id, 'lCIdlGoR2V2HPOEOFkF9', dateHistory, foodHistoryList, exerciseHistoryList);
 
-        final existingFoodHistory =
-            List<String>.from(document.data()['FoodID'] ?? []);
+        final existingFoodHistory = List<FoodDetailHistory>.from(
+            document.data()['FoodDetailHistory']?.map((e) => FoodDetailHistory(
+                      e['FoodID'] ?? '',
+                      e['NetWeight'] ?? 0,
+                    )) ??
+                []);
 
         existingFoodHistory.addAll(foodHistoryList);
 
+        print(existingFoodHistory.length);
+
         await caloHistoryCollection.doc(document.id).update({
-          'FoodID': existingFoodHistory,
+          'FoodDetailHistory':
+              existingFoodHistory.map((history) => history.toJson()).toList(),
         }).then((value) {
           print("Calo history update\nUID:${caloHistory.CaloHistoryID}");
           // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CaloPage()));
@@ -143,8 +150,8 @@ class _FoodCaloState extends State<FoodCaloPage> {
       } else {
         final uid = caloHistoryCollection.doc().id;
 
-        CaloHistory caloHistory = CaloHistory(
-            uid, 'lCIdlGoR2V2HPOEOFkF9', dateHistory, foodHistory);
+        CaloHistory caloHistory =
+            CaloHistory(uid, 'lCIdlGoR2V2HPOEOFkF9', dateHistory, foodHistory, exerciseHistoryList);
 
         await caloHistoryCollection
             .doc(caloHistory.CaloHistoryID)
@@ -211,7 +218,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
                                 splashColor: Colors.transparent,
                                 highlightColor: Colors.transparent,
                                 onPressed: _searchController.clear,
-                                icon: Icon(CupertinoIcons.clear_circled_solid)),
+                                icon: Icon(Icons.clear)),
                       ),
                       onChanged: (value) {
                         // Khi nội dung thanh tìm kiếm thay đổi
@@ -360,79 +367,193 @@ class _FoodCaloState extends State<FoodCaloPage> {
         child: ListView.builder(
             itemCount: foods.length,
             itemBuilder: (context, index) {
-              return Container(
-                  padding: const EdgeInsets.all(6),
-                  margin: const EdgeInsets.symmetric(vertical: 5),
-                  decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15)),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Image.network(
-                        width: 50,
-                        height: 50,
-                        foods[index].FoodImage ?? "",
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.image),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal:
-                                  MediaQuery.sizeOf(context).width * 0.1),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                foods[index].FoodName ?? "",
-                                style: GoogleFonts.getFont('Montserrat',
-                                    fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                "100g - ${foods[index].FoodCalo} calo",
-                                style: GoogleFonts.getFont(
-                                  'Montserrat',
-                                  fontSize: 16,
-                                  color: Colors.grey,
+              return InkWell(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      int netWeight = defaultNetWeight;
+                      return StatefulBuilder(
+                        builder: (context, setState) {
+                          return AlertDialog(
+                            // backgroundColor: ColorTheme.lightGreenColor,
+                            content: Stack(
+                              clipBehavior: Clip.none,
+                              children: <Widget>[
+                                Positioned(
+                                  right: -40,
+                                  top: -40,
+                                  child: InkResponse(
+                                    onTap: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: CircleAvatar(
+                                      backgroundColor:
+                                      ColorTheme.lightGreenColor,
+                                      child: Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: <Widget>[
+                                    Image.network(
+                                      width: 200,
+                                      height: 200,
+                                      foods[index].FoodImage ?? "",
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                      const Icon(Icons.image),
+                                    ),
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                    Text(
+                                      foods[index].FoodName ?? "",
+                                      style: GoogleFonts.getFont('Montserrat',
+                                          fontSize: 30,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      "${netWeight}g - ${(netWeight * foods[index].FoodCalo) / defaultNetWeight} calo",
+                                      style: GoogleFonts.getFont(
+                                        'Montserrat',
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                    InputQty.int(
+                                      initVal: netWeight,
+                                      minVal: 1,
+                                      decoration: const QtyDecorationProps(
+                                          isBordered: false,
+                                          borderShape: BorderShapeBtn.circle,
+                                          width: 50,
+                                          constraints: BoxConstraints()),
+                                      onQtyChanged: (val) {
+                                        setState(() {
+                                          netWeight = val;
+                                        });
+                                      },
+                                    ),
+                                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        padding: EdgeInsets.all(15),
+                                        backgroundColor:
+                                        ColorTheme.backgroundColor,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(30),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Thêm ngay',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      onPressed: () {
+                                        foodHistoryList.clear();
+                                        foodHistoryList.add(FoodDetailHistory(foods[index].FoodID, netWeight));
+                                        addCaloHistory(foodHistoryList);
+                                        SnackBarErrorMess.show(
+                                            context, 'Thêm ${foods[index].FoodName} thành công!');
+                                      },
+                                    )
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+                child: Container(
+                    padding: const EdgeInsets.all(6),
+                    margin: const EdgeInsets.symmetric(vertical: 5),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Image.network(
+                          width: 50,
+                          height: 50,
+                          foods[index].FoodImage ?? "",
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.image),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal:
+                                    MediaQuery.sizeOf(context).width * 0.1),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  foods[index].FoodName ?? "",
+                                  style: GoogleFonts.getFont('Montserrat',
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  "${defaultNetWeight}g - ${foods[index].FoodCalo} calo",
+                                  style: GoogleFonts.getFont(
+                                    'Montserrat',
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            print(_selectStates[index]);
-                            _selectStates[index] = !_selectStates[
-                                index]; // chuyển đồi trạng thái khi chọn icon
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              print(_selectStates[index]);
+                              _selectStates[index] = !_selectStates[
+                                  index]; // chuyển đồi trạng thái khi chọn icon
 
-                            value += !_selectStates[index]
-                                ? -foods[index].FoodCalo
-                                : foods[index].FoodCalo;
+                              value += !_selectStates[index]
+                                  ? -foods[index].FoodCalo
+                                  : foods[index].FoodCalo;
 
+                              _selectStates[index]
+                                  ? foodHistoryList.add(FoodDetailHistory(
+                                      foods[index].FoodID, defaultNetWeight))
+                                  : foodHistoryList.remove(FoodDetailHistory(
+                                      foods[index].FoodID, defaultNetWeight));
+
+                              print(_selectStates[index]);
+                              // print()
+                              print(foodHistoryList);
+                            });
+                            print("Value: " + value.toString());
+                          },
+                          icon: Icon(
                             _selectStates[index]
-                                ? foodHistoryList.add(foods[index].FoodID)
-                                : foodHistoryList.remove(foods[index].FoodID);
-
-                            print(_selectStates[index]);
-                            // print()
-                            print(foodHistoryList);
-                          });
-                          print("Value: " + value.toString());
-                        },
-                        icon: Icon(
-                          _selectStates[index]
-                              ? Icons.check_circle_rounded
-                              : Icons.add_circle_outline,
-                          color:
-                              _selectStates[index] ? Colors.green : Colors.grey,
-                          size: 30,
+                                ? Icons.check_circle_rounded
+                                : Icons.add_circle_outline,
+                            color: _selectStates[index]
+                                ? Colors.green
+                                : Colors.grey,
+                            size: 30,
+                          ),
                         ),
-                      ),
-                    ],
-                  ));
+                      ],
+                    )),
+              );
             }));
   }
 }

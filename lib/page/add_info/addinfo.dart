@@ -1,5 +1,6 @@
 
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
@@ -7,8 +8,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:healthylife/model/UserHealthy.dart';
 import 'package:healthylife/page/account/login.dart';
+import 'package:healthylife/util/snack_bar_error_mess.dart';
 import 'package:healthylife/widget/home/home_bottom_navigation.dart';
 import 'package:intl/intl.dart';
 import '../../util/color_theme.dart';
@@ -16,7 +17,7 @@ import '../auth.dart';
 
 
 class AddInfo extends StatefulWidget{
-  const AddInfo({super.key});
+  const AddInfo({Key? key}) : super(key: key);
 
   @override
   State<AddInfo> createState() => _AddInforState();
@@ -24,8 +25,10 @@ class AddInfo extends StatefulWidget{
 
 class _AddInforState extends State<AddInfo>{
   final User? user = Auth().currentUser;
+  final TextEditingController nameController = TextEditingController();
   String _name = '';
   bool isSelected = true;
+  String selectedGender = '';
   bool _state_1 = false;   // trạng thái của date
   bool _state_2 = false;   // trạng thái của weight
   bool _state_3 = false;   // trạng thái của height
@@ -48,6 +51,7 @@ class _AddInforState extends State<AddInfo>{
             ),
           ),
           content: TextFormField(
+            controller: nameController,
             autofocus: true,
             onChanged: (value) {
               setState(() {
@@ -423,7 +427,7 @@ class _AddInforState extends State<AddInfo>{
                 top: MediaQuery.of(context).size.height * 0.08,
                 left: MediaQuery.of(context).size.width * 0.05,
                 child:
-                Text(user?.email ?? 'Nhập thông tin',
+                Text('Nhập thông tin',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -469,6 +473,7 @@ class _AddInforState extends State<AddInfo>{
                                   onTap: () {
                                     setState(() {
                                       isSelected = !isSelected;
+                                      //selectedGender = "Nam";
                                     });
                                   },
                                   child: Column(
@@ -501,6 +506,7 @@ class _AddInforState extends State<AddInfo>{
                                   onTap: () {
                                     setState(() {
                                       isSelected = !isSelected;
+                                      //selectedGender = "Nữ";
                                     });
                                   },
                                   child: Column(
@@ -684,11 +690,51 @@ class _AddInforState extends State<AddInfo>{
             foregroundColor: MaterialStateProperty.all(Colors.white)
           ),
           onPressed: () {
-            // Auth().singOut();
+            //Auth().singOut();
+            String name = nameController.text.trim();
+            String? email = user?.email;
+            String? credential;
+            String birthday = DateFormat('dd/MM/yyyy').format(_selectedDate!);
+            String dateHistory = DateFormat('dd/MM/yyyy').format(DateTime.now());
+            int age = DateTime.now().year - _selectedDate!.year;
+            print('Age: $age');
+            int? weight = _selectedWeight;
+            int? height = _selectedHeight;
+            double? bmi = weight!/((height!/100*height/100));
+            double fat;
+            double calo;
+            if(isSelected == true){
+              selectedGender = "Nam";
+              fat = 1.2 * bmi + 0.23 * age - 5.4 - 10.8;
+              calo = 66 + (13.7 * _selectedWeight!) + (5 * _selectedHeight!) - (6.8 * age);
+              // print('Gender: $selectedGender');
+              // print('Fat: $fat');
+              // print('calo: $calo');
+            } else{
+              selectedGender = "Nữ";
+              fat = 1.2 * bmi + 0.23 * age - 5.4;
+              calo = 655 + (9.6 * _selectedWeight!) + (1.8 * _selectedHeight!) - (4.7 * age);
+              // print('Gender: $selectedGender');
+              // print('Fat: $fat');
+              // print('calo: $calo');
+            }
 
-
-
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation(userHealthy: UserHealthy('lCIdlGoR2V2HPOEOFkF9', 'nguyenkhai1470@gmail.com', 'test123456', 'Nguyễn Khải', 'https://static.vecteezy.com/system/resources/previews/011/459/666/original/people-avatar-icon-png.png', DateTime.now()))));
+            //print("BMI:" + bmi.toString());
+            if(email!.isNotEmpty){
+              credential = email;
+              saveUser(name, email, birthday, selectedGender);
+            } else{
+              credential = user?.phoneNumber;
+              saveUser(name, email, birthday, selectedGender);
+            }
+            //saveUser(name, email!, birthday, selectedGender);
+            saveUserDetail(weight, height, bmi, fat, calo, dateHistory);
+            // if(name.isEmpty || birthday == null){
+            //
+            // } else{
+            //   SnackBarErrorMess.show(context, "Nhập đủ thông tin");
+            // }
+            //Navigator.push(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation()));
             },
           child: Text('Xác nhận',
             style: TextStyle(fontSize: 16),
@@ -699,4 +745,27 @@ class _AddInforState extends State<AddInfo>{
     );
   }
 
+  String? userID;
+  void saveUser(String name, String credential, String birthday, String gender) {
+    FirebaseFirestore.instance
+        .collection('User')
+        .add({'UserName': name, 'UserCredential': credential, 'UserBirthday': birthday, 'UserGender': gender})
+        .then((DocumentReference docRef) {
+          // lấy id vừa tạo
+          userID = docRef.id;
+          //Lưu vào UserID
+          docRef.update({'UserID' : userID});
+          //return userID;
+    });
+  }
+
+  void saveUserDetail(int weight, int height, double bmi, double fat, double calo, String dateHistory){
+    FirebaseFirestore.instance
+        .collection('UserDetail')
+        .add({'UserWeight': weight, 'UserHeight': height, 'UserBMI': bmi, 'UserFat': fat, 'UserCalo': calo, 'DateHistory': dateHistory})
+        .then((DocumentReference docRef){
+          String userDetailID = docRef.id;
+          docRef.update({'UserDetailID': userDetailID, 'UserID': userID});
+    });
+  }
 }

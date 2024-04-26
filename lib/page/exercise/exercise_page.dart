@@ -4,12 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/util/color_theme.dart';
+import 'package:input_quantity/input_quantity.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+import '../../model/CaloHistory.dart';
 import '../../model/Exercise.dart';
 import '../../model/ExerciseCategory.dart';
+import '../../util/snack_bar_error_mess.dart';
 
 
 class ExercisePage extends StatefulWidget {
@@ -21,6 +24,7 @@ class ExercisePage extends StatefulWidget {
 
 class _ExerciseState extends State<ExercisePage> {
   int _selectIndex = 0;
+  int defaultDuration = 30;
 
   bool _isLoading = false;
 
@@ -30,11 +34,11 @@ class _ExerciseState extends State<ExercisePage> {
 
   late List<Exercise> filteredExercises = [];
 
-  late List<String> exerciseHistoryList = [];
+  late List<FoodDetailHistory> foodHistoryList = [];
 
-  num value = 0;
+  late List<ExerciseDetailHistory> exerciseHistoryList = [];
 
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -61,7 +65,6 @@ class _ExerciseState extends State<ExercisePage> {
     _searchController.clear();
 
     _selectIndex = 0;
-    value = 0;
   }
 
   // hàm lấy dữ liệu loại thức ăn từ firebase
@@ -105,56 +108,62 @@ class _ExerciseState extends State<ExercisePage> {
       exercises = querySnapshot.docs.map((doc) => Exercise.fromFirestore(doc)).toList();
     });
   }
-  /*Future<void> addExerciseHistory(List<String> exerciseHistory) async {
+  Future<void> addExerciseHistory(List<ExerciseDetailHistory> exerciseHistory) async {
     try {
 
       DateTime now = DateTime.now();
-      String formattedDate = DateFormat('dd/MM/yyyy').format(now);
+      String dateHistory = DateFormat('dd/MM/yyyy').format(now);
 
       final exerciseHistoryCollection =
-      FirebaseFirestore.instance.collection('ExerciseHistory');
+      FirebaseFirestore.instance.collection('CaloHistory');
 
       final querySnapshot = await exerciseHistoryCollection
           .where('UserID', isEqualTo: 'lCIdlGoR2V2HPOEOFkF9')
-          .where('DateHistory', isEqualTo: formattedDate)
+          .where('DateHistory', isEqualTo: dateHistory)
           .get();
 
       if(querySnapshot.docs.isNotEmpty) {
         final document = querySnapshot.docs.first;
 
-        ExerciseHistory exerciseHistory = ExerciseHistory(document.id, 'lCIdlGoR2V2HPOEOFkF9', formattedDate, exerciseHistoryList);
+        CaloHistory caloHistory = CaloHistory(
+            document.id, 'lCIdlGoR2V2HPOEOFkF9', dateHistory, foodHistoryList, exerciseHistoryList);
 
-        final existingExerciseHistory = List<String>.from(document.data()['FoodID'] ?? []);
-
+        final existingExerciseHistory = List<ExerciseDetailHistory>.from(
+            document.data()['ExerciseDetailHistory']?.map((e) => ExerciseDetailHistory(
+              e['ExerciseID'] ?? '',
+              e['Duration'] ?? 0,
+            )) ??
+                []);
         existingExerciseHistory.addAll(exerciseHistoryList);
 
-        await exerciseHistoryCollection
-            .doc(document.id)
-            .update({
-          'ExerciseID': existingExerciseHistory,
-        })
-            .then((value) {
-          print("Exercise history update\nUID:${exerciseHistory.ExerciseHistoryID}");
+        await exerciseHistoryCollection.doc(document.id).update({
+          'ExerciseDetailHistory':
+          existingExerciseHistory.map((history) => history.toJson()).toList(),
+        }).then((value) {
+          print("Calo history update\nUID:${caloHistory.CaloHistoryID}");
+          // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CaloPage()));
           Navigator.pop(context);
         }).catchError((error) => print("Failed to update Exercise history: $error"));
 
       } else {
         final uid = exerciseHistoryCollection.doc().id;
 
-        ExerciseHistory caloHistory = ExerciseHistory(uid, 'lCIdlGoR2V2HPOEOFkF9', formattedDate, exerciseHistory);
+        CaloHistory caloHistory =
+        CaloHistory(uid, 'lCIdlGoR2V2HPOEOFkF9', dateHistory, foodHistoryList, exerciseHistory);
 
         await exerciseHistoryCollection
-            .doc(caloHistory.ExerciseHistoryID)
+            .doc(caloHistory.CaloHistoryID)
             .set(caloHistory.toJson())
             .then((value) {
-          print("Exercise history Added\nUID:${caloHistory.ExerciseHistoryID}");
+          print("Exercise history Added\nUID:${caloHistory.CaloHistoryID}");
           Navigator.pop(context);
         }).catchError((error) => print("Failed to add Exercise history: $error"));
       }
     } on Exception catch (e) {
       print(e);
     }
-  }*/
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -302,41 +311,6 @@ class _ExerciseState extends State<ExercisePage> {
                   _searchController.text.isEmpty
                       ? listItem(exercises)
                       : listItem(filteredExercises),
-                  if (isChecked())
-                    Padding(
-                      padding: EdgeInsets.only(
-                          bottom: MediaQuery.of(context).size.height *
-                              0.025),
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: SizedBox(
-                          width:
-                          MediaQuery.of(context).size.width * 2 / 3,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.all(15),
-                              backgroundColor:
-                              ColorTheme.backgroundColor,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                            onPressed: () {
-                              // addCaloHistory(foodHistoryList);
-                            },
-                            child: Text(
-                              'Thêm ngay - $value calo',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -373,11 +347,6 @@ class _ExerciseState extends State<ExercisePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        // GestureDetector(
-                        //   onTap: () {
-                        //     launchUrlString(exercises[index].ExerciseLink ?? "");
-                        //   },
-                        // ),
                         Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: MediaQuery.of(context).size.width * 0.01,
@@ -406,6 +375,135 @@ class _ExerciseState extends State<ExercisePage> {
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
+                            backgroundColor:
+                            ColorTheme.backgroundColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          onPressed: () {
+
+                            print('hello');
+
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                int duration = defaultDuration;
+                                return StatefulBuilder(
+                                  builder: (context, setState) {
+                                    return AlertDialog(
+                                      // backgroundColor: ColorTheme.lightGreenColor,
+                                      content: Stack(
+                                        clipBehavior: Clip.none,
+                                        children: <Widget>[
+                                          Positioned(
+                                            right: -40,
+                                            top: -40,
+                                            child: InkResponse(
+                                              onTap: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: CircleAvatar(
+                                                backgroundColor:
+                                                ColorTheme.lightGreenColor,
+                                                child: Icon(
+                                                  Icons.close,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: <Widget>[
+                                              Image.network(
+                                                fit: BoxFit.cover,
+                                                exercises[index].ExerciseImage ?? "",
+                                                errorBuilder: (context, error, stackTrace) =>
+                                                const Icon(Icons.image),
+                                              ),
+                                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                              Text(
+                                                exercises[index].ExerciseName ?? "",
+                                                style: GoogleFonts.getFont('Montserrat',
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              Text(
+                                                "${duration} phút - ${(duration * exercises[index].ExerciseCalo) / defaultDuration} calo",
+                                                style: GoogleFonts.getFont(
+                                                  'Montserrat',
+                                                  fontSize: 16,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                              InputQty.int(
+                                                initVal: duration,
+                                                minVal: 1,
+                                                decoration: const QtyDecorationProps(
+                                                    isBordered: false,
+                                                    borderShape: BorderShapeBtn.circle,
+                                                    width: 50,
+                                                    constraints: BoxConstraints()),
+                                                onQtyChanged: (val) {
+                                                  setState(() {
+                                                    duration = val;
+                                                  });
+                                                },
+                                              ),
+                                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                              ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  padding: EdgeInsets.all(15),
+                                                  backgroundColor:
+                                                  ColorTheme.backgroundColor,
+                                                  foregroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(30),
+                                                  ),
+                                                ),
+                                                child: const Text(
+                                                  'Thêm ngay',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                onPressed: () {
+                                                  exerciseHistoryList.clear();
+                                                  exerciseHistoryList.add(ExerciseDetailHistory(exercises[index].ExerciseID, duration));
+                                                  addExerciseHistory(exerciseHistoryList);
+                                                  SnackBarErrorMess.show(
+                                                      context, 'Thêm ${exercises[index].ExerciseName} thành công!');
+                                                },
+                                              )
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            );
+                          },
+                          child: const Text(
+                            'Tập ngay',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ],
                     )),

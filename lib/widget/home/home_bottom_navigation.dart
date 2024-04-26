@@ -42,6 +42,7 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
   }
 
   void _onItemTapped(int index) {
+
     setState(() {
       _currentIndex = index;
       _pageController.animateToPage(
