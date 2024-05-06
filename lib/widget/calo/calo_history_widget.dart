@@ -12,8 +12,9 @@ import '../../util/snack_bar_error_mess.dart';
 
 class CaloHistoryWidget extends StatefulWidget {
   String userID;
+  Function(String) onDateChanged;
 
-  CaloHistoryWidget({required this.userID});
+  CaloHistoryWidget({required this.userID, required this.onDateChanged});
 
   @override
   State<CaloHistoryWidget> createState() => _CaloHistoryWidgetState();
@@ -76,6 +77,7 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
       setState(() {
         _selectedDate = picked;
         _dataLoadingFuture = fetchData();
+        widget.onDateChanged(getDate(_selectedDate));
       });
     }
   }
@@ -93,7 +95,7 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
     } else if (difference == 1) {
       return 'Hôm qua';
     } else {
-      return '${difference} ngày sau';
+      return '${difference} ngày trước';
     }
   }
 
@@ -261,6 +263,8 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
           ])
         });
 
+        itemName = foods[index].FoodName;
+
         totalFoodCalo -= (foodHistories[index].NetWeight * foods[index].FoodCalo) / defaultNetWeight;
 
 
@@ -404,8 +408,8 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
                               // Chỉnh độ to nhỏ của gauge
                               curve: Curves.elasticOut,
                               axis: GaugeAxis(
-                                min: minGaugeValue,
-                                max: maxGaugeValue,
+                                min: totalFoodCalo.toDouble() - totalExerciseCalo.toDouble() < 0 ? minGaugeValue : 0,
+                                max: totalFoodCalo.toDouble() - totalExerciseCalo.toDouble() > maxGaugeValue ? totalFoodCalo.toDouble() - totalExerciseCalo.toDouble() : maxGaugeValue,
                                 degrees: 360,
                                 pointer: null,
                                 progressBar: const GaugeProgressBar.basic(
@@ -589,7 +593,7 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
 
                       final food = foods[index];
                       return Dismissible(
-                        key: Key(food.FoodID),
+                        key: UniqueKey(),
                         direction: DismissDirection.endToStart,
                         // Kéo sang phải đề remove dữ liệu
                         onDismissed: (direction) {

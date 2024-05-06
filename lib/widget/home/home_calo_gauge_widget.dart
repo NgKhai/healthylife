@@ -6,6 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/util/color_theme.dart';
 import 'package:intl/intl.dart';
 
+import '../../model/CaloHistory.dart';
+import '../../model/Exercise.dart';
+import '../../model/Food.dart';
 import '../../page/calo/calo_page.dart';
 
 class HomeCaloGaugeWidget extends StatefulWidget {
@@ -18,7 +21,25 @@ class HomeCaloGaugeWidget extends StatefulWidget {
 
 class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
 
-  num _userCalo = 0;
+  // num _userCalo = 0;
+
+  num totalExerciseCalo = 0;
+  num totalFoodCalo = 0;
+
+  int defaultDuration = 30;
+  int defaultNetWeight = 100;
+
+  double minGaugeValue = 0;
+  double maxGaugeValue = 1500;
+
+  List<ExerciseDetailHistory> exerciseHistories = [];
+  List<Exercise> exercises = [];
+
+  List<FoodDetailHistory> foodHistories = [];
+  List<Food> foods = [];
+
+  bool isLoading = true;
+  Future<void>? _dataLoadingFuture;
 
   @override
   void initState() {
@@ -31,58 +52,136 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
   Future<void> fetchData() async {
 
     setState(() {
+      totalExerciseCalo = 0;
+      totalFoodCalo = 0;
 
+      isLoading = true;
+
+      exerciseHistories.clear();
+      exercises.clear();
+
+      foodHistories.clear();
+      foods.clear();
     });
 
-    // Lấy dữ liệu từ Food History
-    await getUserDetail(widget.userID);
+    // Lấy dữ liệu từ Exercise History
+    await getCaloHistory(widget.userID, getDate(DateTime.now()));
 
 
+    if (exerciseHistories.isNotEmpty || foodHistories.isNotEmpty) {
+      await getExerciseAndFood();
+    }
+
+    // Tính tổng calo nạp
+    for(var i = 0; i < foodHistories.length; i++) {
+      totalFoodCalo += (foodHistories[i].NetWeight * foods[i].FoodCalo) / defaultNetWeight;
+    }
+
+
+    // Tính tổng calo tiêu hao
+    for(var i = 0; i < exerciseHistories.length; i++) {
+      totalExerciseCalo += (exerciseHistories[i].Duration * exercises[i].ExerciseCalo) / defaultDuration;
+    }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
-  // Hàm lấy dữ liệu CaloHistory
-  Future<void> getUserDetail(String userID) async {
+  String getDate(DateTime _selectedDate) {
+    return DateFormat('dd/MM/yyyy').format(_selectedDate);
+  }
+
+  Future<void> getCaloHistory(String userID, String dateHistory) async {
     try {
-
       // lấy dữ liệu CaloHistory thông qua userID và date history
-      String dateHistory = DateFormat('dd/MM/yyyy').format(DateTime.now());
-
       final caloHistoryQuerySnapshot = await FirebaseFirestore.instance
-          .collection('UserDetail')
+          .collection('CaloHistory')
           .where('UserID', isEqualTo: userID)
           .where('DateHistory', isEqualTo: dateHistory)
           .get();
 
       // Nếu dữ liệu tồn tại
       if (caloHistoryQuerySnapshot.docs.isNotEmpty) {
-
         // lấy id document
         final document = caloHistoryQuerySnapshot.docs.first;
 
+        exerciseHistories = List<ExerciseDetailHistory>.from(
+            document.data()['ExerciseDetailHistory']?.map((e) => ExerciseDetailHistory(
+              e['ExerciseID'] ?? '',
+              e['Duration'] ?? 0,
+            )) ??
+                []);
 
+        // lấy List dữ liệu FoodID và truyền vào tham số foodHistories
+        foodHistories = List<FoodDetailHistory>.from(
+            document.data()['FoodDetailHistory']?.map((e) => FoodDetailHistory(
+              e['FoodID'] ?? '',
+              e['NetWeight'] ?? 0,
+            )) ??
+                []);
 
-        num userCalo = document.data()['UserCalo'];
-        print("User calo: " + userCalo.toString());
-        print(userCalo.toDouble());
-
-        setState(() {
-          _userCalo = userCalo;
-        });
-
+        // Nếu dữ liệu chưa có sẽ tạo rỗng
       } else {
-        print('lỗi');
+        exerciseHistories = [];
+        foodHistories = [];
       }
     } catch (error) {
       print('Error fetching data: $error');
     }
   }
 
+  Future<void> getExerciseAndFood() async {
+    List<Exercise> fetchedExercises = [];
+    List<Food> fetchedFoods = [];
+
+    for (ExerciseDetailHistory exerciseID in exerciseHistories) {
+      final exerciseDocSnapshot = await FirebaseFirestore.instance
+          .collection('Exercise')
+          .doc(exerciseID.ExerciseID)
+          .get();
+
+      if (exerciseDocSnapshot.exists) {
+        Exercise exerciseItem = Exercise.fromFirestore(exerciseDocSnapshot);
+        fetchedExercises.add(exerciseItem);
+      }
+    }
+
+    for (FoodDetailHistory foodID in foodHistories) {
+      final foodDocSnapshot = await FirebaseFirestore.instance
+          .collection('Food')
+          .doc(foodID.FoodID)
+          .get();
+
+      if (foodDocSnapshot.exists) {
+        Food foodItem = Food.fromFirestore(foodDocSnapshot);
+        fetchedFoods.add(foodItem);
+      }
+    }
+    setState(() {
+      exercises = fetchedExercises;
+      foods = fetchedFoods;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => CaloPage()));
+        // Navigator.push(context,
+        //     MaterialPageRoute(builder: (context) => CaloPage(firstfetch: firstfetch)));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CaloPage(userID: widget.userID,),
+          ),
+        ).then((data) {
+          // Update the state or perform actions based on the returned data
+          if (data != null) {
+            fetchData();
+            // Perform actions based on the returned data
+          }
+        });
       },
       child: Container(
         decoration: BoxDecoration(
@@ -111,7 +210,7 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
                       child: Column(
                         children: [
                           Text(
-                            '110',
+                            totalFoodCalo.toStringAsFixed(0),
                             textAlign: TextAlign.center,
                             style: GoogleFonts.getFont(
                               'Montserrat',
@@ -155,22 +254,21 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
                           AnimatedRadialGauge(
                             duration:
                             const Duration(milliseconds: 2000),
-                            builder: (context, _, value) =>
-                                RadialGaugeLabel(
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  value: 1500 - value,
-                                ),
-                            value: _userCalo.toDouble(),
+                            builder: (context, _, value) => RadialGaugeLabel(
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              value: maxGaugeValue - value,
+                            ),
+                            value: totalFoodCalo.toDouble() - totalExerciseCalo.toDouble(),
                             radius: 60,
                             // Chỉnh độ to nhỏ của gauge
                             curve: Curves.elasticOut,
-                            axis: const GaugeAxis(
-                              min: 0,
-                              max: 1500,
+                            axis: GaugeAxis(
+                              min: totalFoodCalo.toDouble() - totalExerciseCalo.toDouble() < 0 ? minGaugeValue : 0,
+                              max: totalFoodCalo.toDouble() - totalExerciseCalo.toDouble() > maxGaugeValue ? totalFoodCalo.toDouble() - totalExerciseCalo.toDouble() : maxGaugeValue,
                               degrees: 360,
                               pointer: null,
                               progressBar:
@@ -202,7 +300,7 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
                       child: Column(
                         children: [
                           Text(
-                            '0',
+                            totalExerciseCalo.toStringAsFixed(0),
                             textAlign: TextAlign.center,
                             style: GoogleFonts.getFont(
                               'Montserrat',

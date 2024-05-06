@@ -8,12 +8,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:healthylife/model/UserHealthy.dart';
 import 'package:healthylife/page/account/login.dart';
 import 'package:healthylife/util/snack_bar_error_mess.dart';
 import 'package:healthylife/widget/home/home_bottom_navigation.dart';
 import 'package:intl/intl.dart';
 import '../../util/color_theme.dart';
 import '../auth.dart';
+import '../intensity/exercise_intensity.dart';
 
 
 class AddInfo extends StatefulWidget{
@@ -35,6 +37,8 @@ class _AddInforState extends State<AddInfo>{
   DateTime? _selectedDate = DateTime.now();
   int? _selectedWeight = 50;
   int? _selectedHeight = 170;
+  String? userID;
+  String? userDetailID;
 
   // Dialog Name
   Future<void> _showNameDialog(BuildContext context) async {
@@ -689,10 +693,10 @@ class _AddInforState extends State<AddInfo>{
             backgroundColor: MaterialStateProperty.all(ColorTheme.backgroundColor),
             foregroundColor: MaterialStateProperty.all(Colors.white)
           ),
-          onPressed: () {
+          onPressed: () async {
             //Auth().singOut();
             String name = nameController.text.trim();
-            String? email = user?.email;
+            String email = user!.email ?? "";
             String? credential;
             String birthday = DateFormat('dd/MM/yyyy').format(_selectedDate!);
             String dateHistory = DateFormat('dd/MM/yyyy').format(DateTime.now());
@@ -720,21 +724,23 @@ class _AddInforState extends State<AddInfo>{
             }
 
             //print("BMI:" + bmi.toString());
-            if(email!.isNotEmpty){
+            if(email.isNotEmpty){
               credential = email;
-              saveUser(name, email, birthday, selectedGender);
+              await saveUser(name, credential, birthday, selectedGender);
             } else{
               credential = user?.phoneNumber;
-              saveUser(name, email, birthday, selectedGender);
+              await saveUser(name, credential!, birthday, selectedGender);
             }
             //saveUser(name, email!, birthday, selectedGender);
-            saveUserDetail(weight, height, bmi, fat, calo, dateHistory);
+            await saveUserDetail(weight, height, bmi, fat, calo, dateHistory);
+            print('UserID: $userID');
+            print('UserDetaiID: $userDetailID');
             // if(name.isEmpty || birthday == null){
             //
             // } else{
             //   SnackBarErrorMess.show(context, "Nhập đủ thông tin");
             // }
-            //Navigator.push(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => ExcerciseIntensity(userHealthy: UserHealthy(userID!, credential!, selectedGender, name, birthday), userDetailID: userDetailID)));
             },
           child: Text('Xác nhận',
             style: TextStyle(fontSize: 16),
@@ -745,26 +751,31 @@ class _AddInforState extends State<AddInfo>{
     );
   }
 
-  String? userID;
-  void saveUser(String name, String credential, String birthday, String gender) {
-    FirebaseFirestore.instance
+  Future<void> saveUser(String name, String credential, String birthday, String gender) async {
+    await FirebaseFirestore.instance
         .collection('User')
         .add({'UserName': name, 'UserCredential': credential, 'UserBirthday': birthday, 'UserGender': gender})
         .then((DocumentReference docRef) {
           // lấy id vừa tạo
-          userID = docRef.id;
+      setState(() {
+        userID = docRef.id;
+      });
           //Lưu vào UserID
           docRef.update({'UserID' : userID});
           //return userID;
     });
+
+
   }
 
-  void saveUserDetail(int weight, int height, double bmi, double fat, double calo, String dateHistory){
-    FirebaseFirestore.instance
+  Future<void> saveUserDetail(int weight, int height, double bmi, double fat, double calo, String dateHistory) async {
+    await FirebaseFirestore.instance
         .collection('UserDetail')
         .add({'UserWeight': weight, 'UserHeight': height, 'UserBMI': bmi, 'UserFat': fat, 'UserCalo': calo, 'DateHistory': dateHistory})
         .then((DocumentReference docRef){
-          String userDetailID = docRef.id;
+           setState(() {
+             userDetailID = docRef.id;
+           });
           docRef.update({'UserDetailID': userDetailID, 'UserID': userID});
     });
   }

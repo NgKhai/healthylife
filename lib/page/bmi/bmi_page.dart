@@ -6,13 +6,22 @@ import 'package:healthylife/widget/bmi/bmi_gauge_widget.dart';
 import '../../util/color_theme.dart';
 
 class BMIPage extends StatefulWidget {
-  const BMIPage({super.key});
+  String userID;
+
+  BMIPage({super.key, required this.userID});
 
   @override
   State<BMIPage> createState() => _BMIPageState();
 }
 
 class _BMIPageState extends State<BMIPage> {
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,156 +57,31 @@ class _BMIPageState extends State<BMIPage> {
         ],
         backgroundColor: ColorTheme.lightGreenColor,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           vertical: MediaQuery.of(context).size.width * 0.03,
           horizontal: MediaQuery.of(context).size.height * 0.02,
         ),
-        child: Column(
-          children: [
-            BMIGaugeWidget(),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.02,
-            ),
-            Expanded(
-              child: ListView(
-                children: <Widget>[
-                  InkWell(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text('Lịch sử thay đổi'),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                ListTile(
-                                  title: Text('22.01 - Bình thường'),
-                                  onTap: () {
-                                    // Handle item 1 tap
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                                ListTile(
-                                  title: Text('22.03 - Bình thường'),
-                                  onTap: () {
-                                    // Handle item 2 tap
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    child: ListTile(
-                      leading: Icon(Icons.healing),
-                      title: Text(
-                        'Tình trạng',
-                        style: GoogleFonts.getFont(
-                          'Montserrat',
-                          color: Colors.grey,
-                          fontWeight: FontWeight.normal,
-                          fontSize: 16,
-                        ),
-                      ),
-                      subtitle: Text(
-                        'Bình thường',
-                        style: GoogleFonts.getFont(
-                          'Montserrat',
-                          color: Colors.black,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
-                      ),
-                      // trailing: Icon(Icons.more_vert),
-                    ),
-                  ),
-                  Divider(height: 0, thickness: 2, color: Colors.grey),
-                  ListTile(
-                    leading: Icon(Icons.fitness_center),
-                    title: Text(
-                      'Cân nặng',
-                      style: GoogleFonts.getFont(
-                        'Montserrat',
-                        color: Colors.grey,
-                        fontWeight: FontWeight.normal,
-                        fontSize: 16,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '70 kg',
-                      style: GoogleFonts.getFont(
-                        'Montserrat',
-                        color: Colors.black,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
-                    // trailing: Icon(Icons.more_vert),
-                  ),
-                  Divider(height: 0, thickness: 2, color: Colors.grey),
-                  ListTile(
-                    leading: Icon(Icons.person),
-                    title: Text(
-                      'Chiều cao',
-                      style: GoogleFonts.getFont(
-                        'Montserrat',
-                        color: Colors.grey,
-                        fontWeight: FontWeight.normal,
-                        fontSize: 16,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '176cm',
-                      style: GoogleFonts.getFont(
-                        'Montserrat',
-                        color: Colors.black,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
-                    // trailing: Icon(Icons.more_vert),
-                  ),
-                  Divider(height: 0, thickness: 2, color: Colors.grey),
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.025),
-                  Text(
-                    'Thống kê chỉ số BMI trong 7 tuần qua',
-                    style: GoogleFonts.getFont(
-                      'Montserrat',
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  BMIChartWidget(),
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-                ],
+          child: Column(
+            children: [
+              BMIGaugeWidget(userID: widget.userID),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.02,
               ),
-            ),
-
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add your onPressed action here
-        },
-        child: Icon(
-          Icons.add,
-          color: Colors.white,
-        ),
-        backgroundColor: ColorTheme.darkGreenColor,
-        elevation: 4.0,
-        splashColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-          side: BorderSide(color: Colors.white, width: 2.0),
-        ),
+              Text(
+                'Thống kê chỉ số BMI trong 7 ngày qua',
+                style: GoogleFonts.getFont(
+                  'Montserrat',
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              BMIChartWidget(userID: widget.userID),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+            ],
+          ),
       ),
     );
   }

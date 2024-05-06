@@ -155,6 +155,13 @@ class _WalkingPageState extends State<WalkingPage> {
   bool isTracking = false;
   double speed = 0.0; // Movement speed in m/s
 
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    clearTrackingData();
+  }
+
   void clearTrackingData() {
     positions.clear();
     _stopTracking();
@@ -170,6 +177,7 @@ class _WalkingPageState extends State<WalkingPage> {
   }
 
   void _startTracking() async {
+    positions.clear();
     await _getCurrentLocation();
     positions.add(currentLocation!); // Add initial position
     setState(() {
@@ -181,42 +189,59 @@ class _WalkingPageState extends State<WalkingPage> {
   void _stopTracking() {
     setState(() {
       isTracking = false;
+      speed = 0;
     });
   }
 
   void _trackLocation() async {
     if (isTracking) {
+
       final locationData = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
       final newPosition = LatLng(locationData.latitude, locationData.longitude);
       positions.add(newPosition); // Add new position to trail
-      print("Latitude: " + newPosition.latitude.toString() + " | Longitude: " + newPosition.longitude.toString() + " (Track Location)");
 
-      // Calculate speed (assuming sampling rate is approximately constant)
-      // if (positions.length > 1) {
-      //   final distance = distanceBetween(
-      //       positions.last, positions[positions.length - 2]);
-      //   final timeElapsed = DateTime.now().difference(
-      //       timestamps[positions.length - 2]!);
-      //   speed = distance / timeElapsed.inSeconds; // m/s
-      // }
+      print("Latitude: ${locationData.latitude} | Longitude: ${locationData.longitude}");
+      print("This is speed: " + locationData.speed.toString());
 
-        final distance = distanceBetween(
-            positions.last, positions[positions.length - 2]);
-        print("Distance: " + distance.toString());
-
+      // Update current speed with the instantaneous speed provided by locationData
       setState(() {
+        speed = locationData.speed ?? 0.0; // Use 0.0 as default speed if speed is null
         currentLocation = newPosition;
       });
-      _mapController.move(
-          currentLocation!, 16); // Keep map centered on current location
 
+      _mapController.move(
+          currentLocation!, 18); // Keep map centered on current location
 
       // Schedule next location update (adjust interval as needed for performance)
-      Future.delayed(const Duration(milliseconds: 500),
-          _trackLocation); // Update every 500ms
+      Future.delayed(const Duration(milliseconds: 500), _trackLocation); // Update every 500ms
+
+      _calculateCalorieBurn(speed, 175, 70);
+
     }
   }
+
+  double _calculateCalorieBurn(double speed, double weight, double height) {
+    // Constants
+    const double speedFactor = 2.0;
+    const double weightFactor = 0.035;
+    const double heightFactor = 0.029;
+
+    // Calculate calorie burn per minute
+    double calorieBurnPerMinute = (weightFactor * weight) +
+        ((speed * speedFactor) / height) * heightFactor * weight;
+
+    // Convert calorie burn per minute to total calorie burn
+    calorieBurnPerMinute *= 60; // Convert to per hour
+
+    print("Speed: " + speed.toString());
+
+    print(calorieBurnPerMinute);
+
+    return calorieBurnPerMinute;
+  }
+
+
 
   final timestamps = Map<LatLng,
       DateTime>(); // Map positions to timestamps for speed calculation
@@ -255,7 +280,7 @@ class _WalkingPageState extends State<WalkingPage> {
               mapController: _mapController,
               options: MapOptions(
                 center: LatLng(10.776183323564736, 106.66732187988492),
-                zoom: 26,
+                zoom: 16,
               ),
               children: [
                 TileLayer(
@@ -302,7 +327,7 @@ class _WalkingPageState extends State<WalkingPage> {
                 },
                 child: Text(isTracking ? 'Stop' : 'Start'),
               ),
-              Text('Speed: ${speed.toStringAsFixed(2)} km/h'),
+              Text('Speed: ${speed.toStringAsFixed(2)} m/s'),
             ],
           ),
         ],

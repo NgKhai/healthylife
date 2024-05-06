@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/model/CaloHistory.dart';
+import 'package:healthylife/page/calo/calo_page.dart';
 import 'package:healthylife/util/color_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:input_quantity/input_quantity.dart';
@@ -11,7 +12,10 @@ import '../../model/FoodCategory.dart';
 import '../../util/snack_bar_error_mess.dart';
 
 class FoodCaloPage extends StatefulWidget {
-  const FoodCaloPage({super.key});
+  final String userID;
+  final String dateHistory;
+
+  const FoodCaloPage({super.key, required this.userID, required this.dateHistory});
 
   @override
   State<FoodCaloPage> createState() => _FoodCaloState();
@@ -110,22 +114,20 @@ class _FoodCaloState extends State<FoodCaloPage> {
 
   Future<void> addCaloHistory(List<FoodDetailHistory> foodHistory) async {
     try {
-      DateTime now = DateTime.now();
-      String dateHistory = DateFormat('dd/MM/yyyy').format(now);
 
       final caloHistoryCollection =
           FirebaseFirestore.instance.collection('CaloHistory');
 
       final querySnapshot = await caloHistoryCollection
-          .where('UserID', isEqualTo: 'lCIdlGoR2V2HPOEOFkF9')
-          .where('DateHistory', isEqualTo: dateHistory)
+          .where('UserID', isEqualTo: widget.userID)
+          .where('DateHistory', isEqualTo: widget.dateHistory)
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
         final document = querySnapshot.docs.first;
 
         CaloHistory caloHistory = CaloHistory(
-            document.id, 'lCIdlGoR2V2HPOEOFkF9', dateHistory, foodHistoryList, exerciseHistoryList);
+            document.id, widget.userID, widget.dateHistory, foodHistoryList, exerciseHistoryList);
 
         final existingFoodHistory = List<FoodDetailHistory>.from(
             document.data()['FoodDetailHistory']?.map((e) => FoodDetailHistory(
@@ -143,23 +145,80 @@ class _FoodCaloState extends State<FoodCaloPage> {
               existingFoodHistory.map((history) => history.toJson()).toList(),
         }).then((value) {
           print("Calo history update\nUID:${caloHistory.CaloHistoryID}");
-          // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CaloPage()));
-          Navigator.pop(context);
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
         }).catchError(
             (error) => print("Failed to update calo history: $error"));
       } else {
         final uid = caloHistoryCollection.doc().id;
 
         CaloHistory caloHistory =
-            CaloHistory(uid, 'lCIdlGoR2V2HPOEOFkF9', dateHistory, foodHistory, exerciseHistoryList);
+            CaloHistory(uid, widget.userID, widget.dateHistory, foodHistory, exerciseHistoryList);
 
         await caloHistoryCollection
             .doc(caloHistory.CaloHistoryID)
             .set(caloHistory.toJson())
             .then((value) {
           print("Calo history Added\nUID:${caloHistory.CaloHistoryID}");
-          //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CaloPage()));
-          Navigator.pop(context);
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+        }).catchError((error) => print("Failed to add calo history: $error"));
+      }
+    } on Exception catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> addCustomCaloHistory(List<FoodDetailHistory> foodHistory) async {
+    try {
+
+      final caloHistoryCollection =
+      FirebaseFirestore.instance.collection('CaloHistory');
+
+      final querySnapshot = await caloHistoryCollection
+          .where('UserID', isEqualTo: widget.userID)
+          .where('DateHistory', isEqualTo: widget.dateHistory)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final document = querySnapshot.docs.first;
+
+        CaloHistory caloHistory = CaloHistory(
+            document.id, widget.userID, widget.dateHistory, foodHistoryList, exerciseHistoryList);
+
+        final existingFoodHistory = List<FoodDetailHistory>.from(
+            document.data()['FoodDetailHistory']?.map((e) => FoodDetailHistory(
+              e['FoodID'] ?? '',
+              e['NetWeight'] ?? 0,
+            )) ??
+                []);
+
+        existingFoodHistory.addAll(foodHistoryList);
+
+        print(existingFoodHistory.length);
+
+        await caloHistoryCollection.doc(document.id).update({
+          'FoodDetailHistory':
+          existingFoodHistory.map((history) => history.toJson()).toList(),
+        }).then((value) {
+          print("Calo history update\nUID:${caloHistory.CaloHistoryID}");
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+        }).catchError(
+                (error) => print("Failed to update calo history: $error"));
+      } else {
+        final uid = caloHistoryCollection.doc().id;
+
+        CaloHistory caloHistory =
+        CaloHistory(uid, widget.userID, widget.dateHistory, foodHistory, exerciseHistoryList);
+
+        await caloHistoryCollection
+            .doc(caloHistory.CaloHistoryID)
+            .set(caloHistory.toJson())
+            .then((value) {
+          print("Calo history Added\nUID:${caloHistory.CaloHistoryID}");
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
         }).catchError((error) => print("Failed to add calo history: $error"));
       }
     } on Exception catch (e) {
@@ -176,7 +235,10 @@ class _FoodCaloState extends State<FoodCaloPage> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+          }
         ),
         title: Text('Món ăn của bạn'),
         titleTextStyle: GoogleFonts.getFont(
@@ -230,7 +292,112 @@ class _FoodCaloState extends State<FoodCaloPage> {
                   IconButton(
                     icon: Icon(Icons.add),
                     color: Colors.white,
-                    onPressed: () {},
+                    onPressed: () {
+
+                      num _customCalo = 100;
+
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          int netWeight = defaultNetWeight;
+                          return StatefulBuilder(
+                            builder: (context, setState) {
+                              return AlertDialog(
+                                // backgroundColor: ColorTheme.lightGreenColor,
+                                content: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: <Widget>[
+                                    Positioned(
+                                      right: -40,
+                                      top: -40,
+                                      child: InkResponse(
+                                        onTap: () {
+                                          Navigator.pushReplacement(context,
+                                              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+                                        },
+                                        child: CircleAvatar(
+                                          backgroundColor:
+                                          ColorTheme.lightGreenColor,
+                                          child: Icon(
+                                            Icons.close,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: <Widget>[
+                                          Text(
+                                            "Thêm calo đã nạp",
+                                            style: GoogleFonts.getFont('Montserrat',
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                        Text(
+                                          "${_customCalo} calo",
+                                          style: GoogleFonts.getFont(
+                                            'Montserrat',
+                                            fontSize: 16,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                        InputQty.int(
+                                          initVal: _customCalo,
+                                          minVal: 1,
+                                          decoration: const QtyDecorationProps(
+                                              isBordered: false,
+                                              borderShape: BorderShapeBtn.circle,
+                                              width: 50,
+                                              constraints: BoxConstraints()),
+                                          onQtyChanged: (val) {
+                                            setState(() {
+                                              _customCalo = val;
+                                            });
+                                          },
+                                        ),
+                                        SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            padding: EdgeInsets.all(15),
+                                            backgroundColor:
+                                            ColorTheme.backgroundColor,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(30),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Thêm ngay',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          onPressed: () {
+                                            // Navigator.pop(context);
+                                            // foodHistoryList.clear();
+                                            // foodHistoryList.add(FoodDetailHistory(foods[index].FoodID, netWeight));
+                                            // addCaloHistory(foodHistoryList);
+                                            // SnackBarErrorMess.show(
+                                            //     context, 'Thêm ${foods[index].FoodName} thành công!');
+                                          },
+                                        )
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
                   ),
                 ],
               )),
@@ -385,7 +552,8 @@ class _FoodCaloState extends State<FoodCaloPage> {
                                   top: -40,
                                   child: InkResponse(
                                     onTap: () {
-                                      Navigator.of(context).pop();
+                                      Navigator.pushReplacement(context,
+                                          MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
                                     },
                                     child: CircleAvatar(
                                       backgroundColor:
@@ -459,6 +627,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
                                         textAlign: TextAlign.center,
                                       ),
                                       onPressed: () {
+                                        Navigator.pop(context);
                                         foodHistoryList.clear();
                                         foodHistoryList.add(FoodDetailHistory(foods[index].FoodID, netWeight));
                                         addCaloHistory(foodHistoryList);
@@ -529,11 +698,13 @@ class _FoodCaloState extends State<FoodCaloPage> {
                                   ? -foods[index].FoodCalo
                                   : foods[index].FoodCalo;
 
+
+
                               _selectStates[index]
                                   ? foodHistoryList.add(FoodDetailHistory(
                                       foods[index].FoodID, defaultNetWeight))
-                                  : foodHistoryList.remove(FoodDetailHistory(
-                                      foods[index].FoodID, defaultNetWeight));
+                                  : foodHistoryList.removeWhere((item) =>
+                              item.FoodID == foods[index].FoodID && item.NetWeight == defaultNetWeight);
 
                               print(_selectStates[index]);
                               // print()

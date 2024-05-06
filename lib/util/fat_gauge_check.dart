@@ -144,7 +144,7 @@ class FatGaugeCheck {
     ),
   ];
 
-  List<GaugeSegment> segments_Nu_60 = [
+  List<GaugeSegment> segments_Nu_60 = const [
     GaugeSegment(
       from: 0,
       to: 23,

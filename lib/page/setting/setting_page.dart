@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:healthylife/page/auth.dart';
 import 'package:healthylife/widget/setting/height_chart_widget.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
@@ -292,7 +293,9 @@ class _SettingPageState extends State<SettingPage> {
                     backgroundColor:
                         MaterialStateProperty.all(Colors.transparent),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Auth().signOut();
+                  },
                   child: Text(
                     'Đăng xuất',
                     style: GoogleFonts.getFont(

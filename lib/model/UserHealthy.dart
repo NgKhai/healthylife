@@ -2,23 +2,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserHealthy {
   final String UserID;
-  final String UserEmail;
-  final String UserPassword;
+  final String UserCredential;
+  final String UserGender;
   final String UserName;
-  final String UserAvatar;
-  final DateTime UserBirthday;
+  final String UserBirthday;
 
-
-  UserHealthy(this.UserID, this.UserEmail, this.UserPassword, this.UserName,
-      this.UserAvatar, this.UserBirthday);
+  UserHealthy(this.UserID, this.UserCredential, this.UserGender, this.UserName,
+      this.UserBirthday);
 
   toJson() {
     return {
       "UserID": UserID,
-      "UserEmail": UserEmail,
-      "UserPassword": UserPassword,
+      "UserCredential": UserCredential,
+      "UserGender": UserGender,
       "UserName": UserName,
-      "UserAvatar": UserAvatar,
       "UserBirthday": UserBirthday,
     };
   }
@@ -28,10 +25,9 @@ class UserHealthy {
 
     return UserHealthy(
       data?['UserID'] ?? '', // Set value thành mặc định nếu 'UserID' null
-      data?['UserEmail'] ?? '', // Set value thành mặc định nếu 'UserEmail' null
-      data?['UserPassword'] ?? '', // Set value thành mặc định nếu 'UserPassword' null
+      data?['UserCredential'] ?? '', // Set value thành mặc định nếu 'UserCredential' null
+      data?['UserGender'] ?? '', // Set value thành mặc định nếu 'UserGender' null
       data?['UserName'] ?? '', // Set value thành mặc định nếu 'UserName' null
-      data?['UserAvatar'] ?? '', // Set value thành mặc định nếu 'UserAvatar' null
       data?['UserBirthday'] ?? '', // Set value thành mặc định nếu 'UserBirthday' null
     );
   }
