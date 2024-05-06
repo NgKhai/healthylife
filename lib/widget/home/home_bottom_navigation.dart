@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:healthylife/model/UserDetail.dart';
 import 'package:healthylife/model/UserHealthy.dart';
 import 'package:healthylife/page/bmi/bmi_page.dart';
 import 'package:healthylife/page/calo/calo_page.dart';
@@ -7,6 +9,7 @@ import 'package:healthylife/page/home/home_page.dart';
 import 'package:healthylife/page/food_calo/food_calo.dart';
 import 'package:healthylife/page/setting/setting_page.dart';
 import 'package:healthylife/page/walking/walking_page.dart';
+import 'package:intl/intl.dart';
 
 class HomeBottomNavigation extends StatefulWidget {
 
@@ -28,17 +31,18 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
     super.initState();
 
     fetchData();
-
   }
 
 
-  void fetchData() {
+  void fetchData() async {
     _pages = [
     HomePage(userHealthy: widget.userHealthy),
     // FoodCaloPage(),
     WalkingPage(),
     SettingPage(),
     ];
+
+    await getUserDetail(widget.userHealthy.UserID, DateTime.now());
   }
 
   void _onItemTapped(int index) {
@@ -51,6 +55,99 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
         curve: Curves.easeInOut,
       );
     });
+  }
+
+  Future<void> getUserDetail(String userID, DateTime dateTime) async {
+    try {
+      String dateHistory = DateFormat('dd/MM/yyyy').format(dateTime);
+      final userDetailCollection =
+      FirebaseFirestore.instance.collection('UserDetail');
+
+      final userDetailQuerySnapshot = await userDetailCollection
+          .where('UserID', isEqualTo: userID)
+          .where('DateHistory', isEqualTo: dateHistory)
+          .get();
+
+      // Check if data exists for the given date
+      if (userDetailQuerySnapshot.docs.isEmpty) {
+        // Start from the previous date
+        DateTime previousDate = dateTime.subtract(Duration(days: 1));
+
+        // Loop until data is found or a limit is reached
+        int limit = 0; // Limit to 7 days ago
+        while (limit < 7) {
+          String previousDateHistory = DateFormat('dd/MM/yyyy').format(previousDate);
+
+          final previousUserDetailQuerySnapshot = await userDetailCollection
+              .where('UserID', isEqualTo: userID)
+              .where('DateHistory', isEqualTo: previousDateHistory)
+              .get();
+
+          if (previousUserDetailQuerySnapshot.docs.isNotEmpty) {
+            final uid = userDetailCollection.doc().id;
+
+            final document = previousUserDetailQuerySnapshot.docs.first;
+
+            UserDetail userDetail = UserDetail.fromFirestore(document);
+
+            userDetail.UserDetailID = uid;
+            userDetail.DateHistory = dateHistory;
+
+                await userDetailCollection
+                .doc(userDetail.UserDetailID)
+                .set(userDetail.toJson())
+                .then((value) {
+
+            }).catchError((error) => print("Failed to get user detail: $error"));
+                print('limít1: ${limit}');
+            break; // Exit the loop since data is found
+          }
+
+          // Move to the previous day
+          previousDate = previousDate.subtract(Duration(days: 1));
+          limit++;
+          print('limit2: ${limit}');
+        }
+
+        for(int i = 1; i <= limit; i++) {
+          DateTime previousDate = dateTime.subtract(Duration(days: i));
+          String previousDateHistory = DateFormat('dd/MM/yyyy').format(previousDate);
+
+          final previousUserDetailQuerySnapshot = await userDetailCollection
+              .where('UserID', isEqualTo: userID)
+              .where('DateHistory', isEqualTo: dateHistory)
+              .get();
+
+          if (previousUserDetailQuerySnapshot.docs.isNotEmpty) {
+            final uid = userDetailCollection.doc().id;
+
+            final document = previousUserDetailQuerySnapshot.docs.first;
+
+            UserDetail userDetail = UserDetail.fromFirestore(document);
+
+            userDetail.UserDetailID = uid;
+            userDetail.DateHistory = previousDateHistory;
+
+            await userDetailCollection
+                .doc(userDetail.UserDetailID)
+                .set(userDetail.toJson())
+                .then((value) {
+
+            }).catchError((error) => print("Failed to get user detail: $error"));
+          }
+        }
+
+        print(limit);
+
+        if (limit == 0) {
+          // Handle the case where no data is found within the limit
+        }
+      } else {
+        // Data exists for the given date, handle accordingly
+      }
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
   }
 
   @override

@@ -6,6 +6,7 @@ import 'package:healthylife/page/calo/calo_page.dart';
 import 'package:healthylife/page/fat/fat_page.dart';
 import 'package:healthylife/util/color_theme.dart';
 import 'package:healthylife/widget/home/home_bmi_gauge_widget.dart';
+import 'package:healthylife/widget/home/home_exercise_widget.dart';
 import 'package:healthylife/widget/home/home_fat_gauge_widget.dart';
 import 'package:intl/intl.dart';
 
@@ -26,10 +27,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
-  void refresh() {
-
-  }
+  void refresh() {}
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +36,7 @@ class _HomePageState extends State<HomePage> {
         leading: Padding(
           padding: EdgeInsets.only(top: 10, bottom: 10),
           child: CircleAvatar(
-            backgroundImage: NetworkImage(
-                widget.userHealthy.UserAvatar),
+            backgroundImage: NetworkImage('https://cdn-icons-png.freepik.com/512/4811/4811032.png'),
           ),
         ),
         title: Text(
@@ -96,7 +93,8 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Padding(
                         padding: EdgeInsets.symmetric(
-                            horizontal: MediaQuery.of(context).size.width * 0.025),
+                            horizontal:
+                                MediaQuery.of(context).size.width * 0.025),
                         child: Text(
                           'Chỉ số BMI',
                           style: GoogleFonts.getFont(
@@ -106,8 +104,9 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       ),
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-                      HomeBMIGaugeWidget(),
+                      SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.01),
+                      HomeBMIGaugeWidget(userID: widget.userHealthy.UserID),
                     ],
                   ),
                   //-----------
@@ -117,7 +116,8 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Padding(
                         padding: EdgeInsets.symmetric(
-                            horizontal: MediaQuery.of(context).size.width * 0.025),
+                            horizontal:
+                                MediaQuery.of(context).size.width * 0.025),
                         child: Text(
                           'Chỉ số Fat',
                           style: GoogleFonts.getFont(
@@ -127,8 +127,9 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       ),
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-                      HomeFatGaugeWidget(),
+                      SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.01),
+                      HomeFatGaugeWidget(userHealthy: widget.userHealthy),
                     ],
                   ),
                   //-----------
@@ -182,7 +183,13 @@ class _HomePageState extends State<HomePage> {
                   ),
                   Expanded(
                     child: InkWell(
-                      onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => ExercisePage()));},
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ExercisePage(
+                                    userID: widget.userHealthy.UserID, dateHistory: DateFormat('dd/MM/yyyy').format(DateTime.now()))));
+                      },
                       child: Text(
                         'Xem tất cả',
                         textAlign: TextAlign.end,
@@ -198,26 +205,27 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: Offset(0, 3), // changes position of shadow
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(15.0),
-                  child: Container(
-                    height: 150,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              HomeExerciseWidget(),
+              // Container(
+              //   decoration: BoxDecoration(
+              //     borderRadius: BorderRadius.circular(15),
+              //     boxShadow: [
+              //       BoxShadow(
+              //         color: Colors.grey.withOpacity(0.5),
+              //         spreadRadius: 5,
+              //         blurRadius: 7,
+              //         offset: Offset(0, 3), // changes position of shadow
+              //       ),
+              //     ],
+              //   ),
+              //   child: ClipRRect(
+              //     borderRadius: BorderRadius.circular(15.0),
+              //     child: Container(
+              //       height: 150,
+              //       color: Colors.white,
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),

@@ -13,10 +13,13 @@ import '../../model/CaloHistory.dart';
 import '../../model/Exercise.dart';
 import '../../model/ExerciseCategory.dart';
 import '../../util/snack_bar_error_mess.dart';
+import '../calo/calo_page.dart';
 
 
 class ExercisePage extends StatefulWidget {
-  const ExercisePage({super.key});
+  String userID;
+  String dateHistory;
+  ExercisePage({super.key, required this.userID, required this.dateHistory});
 
   @override
   State<ExercisePage> createState() => _ExerciseState();
@@ -30,7 +33,6 @@ class _ExerciseState extends State<ExercisePage> {
 
   late List<ExerciseCategory> exerciseCategories = [];
   late List<Exercise> exercises = [];
-  late List<bool> _selectStates = [];
 
   late List<Exercise> filteredExercises = [];
 
@@ -46,9 +48,6 @@ class _ExerciseState extends State<ExercisePage> {
     fetchData();
   }
 
-  bool isChecked() {
-    return _selectStates.contains(true);
-  }
 
   void fetchData() async {
     setState(() {
@@ -56,7 +55,6 @@ class _ExerciseState extends State<ExercisePage> {
     });
     await getExerciseCategory();
     await getExercise();
-    _selectStates = List.generate(exercises.length, (index) => false);
 
     setState(() {
       _isLoading = false;
@@ -67,7 +65,7 @@ class _ExerciseState extends State<ExercisePage> {
     _selectIndex = 0;
   }
 
-  // hàm lấy dữ liệu loại thức ăn từ firebase
+  // hàm lấy dữ liệu loại bài tập từ firebase
   Future<void> getExerciseCategory() async {
     QuerySnapshot querySnapshot =
     await FirebaseFirestore.instance.collection('ExerciseCategory').get();
@@ -78,11 +76,10 @@ class _ExerciseState extends State<ExercisePage> {
     });
   }
 
-  // hàm lấy dữ liệu Food từ firebase
+  // hàm lấy dữ liệu Exercise từ firebase
   Future<void> getExercise() async {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection('Exercise')
-    // .orderBy("FoodName")
         .get();
     setState(() {
       exercises = querySnapshot.docs.map((doc) => Exercise.fromFirestore(doc)).toList();
@@ -95,7 +92,6 @@ class _ExerciseState extends State<ExercisePage> {
           .where((exercise) =>
           exercise.ExerciseName.toLowerCase().contains(name.toLowerCase()))
           .toList();
-      _selectStates = List.generate(filteredExercises.length, (index) => false);
     });
   }
 
@@ -111,22 +107,19 @@ class _ExerciseState extends State<ExercisePage> {
   Future<void> addExerciseHistory(List<ExerciseDetailHistory> exerciseHistory) async {
     try {
 
-      DateTime now = DateTime.now();
-      String dateHistory = DateFormat('dd/MM/yyyy').format(now);
-
       final exerciseHistoryCollection =
       FirebaseFirestore.instance.collection('CaloHistory');
 
       final querySnapshot = await exerciseHistoryCollection
-          .where('UserID', isEqualTo: 'lCIdlGoR2V2HPOEOFkF9')
-          .where('DateHistory', isEqualTo: dateHistory)
+          .where('UserID', isEqualTo: widget.userID)
+          .where('DateHistory', isEqualTo: widget.dateHistory)
           .get();
 
       if(querySnapshot.docs.isNotEmpty) {
         final document = querySnapshot.docs.first;
 
         CaloHistory caloHistory = CaloHistory(
-            document.id, 'lCIdlGoR2V2HPOEOFkF9', dateHistory, foodHistoryList, exerciseHistoryList);
+            document.id, widget.userID, widget.dateHistory, foodHistoryList, exerciseHistoryList);
 
         final existingExerciseHistory = List<ExerciseDetailHistory>.from(
             document.data()['ExerciseDetailHistory']?.map((e) => ExerciseDetailHistory(
@@ -141,15 +134,16 @@ class _ExerciseState extends State<ExercisePage> {
           existingExerciseHistory.map((history) => history.toJson()).toList(),
         }).then((value) {
           print("Calo history update\nUID:${caloHistory.CaloHistoryID}");
-          // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CaloPage()));
           Navigator.pop(context);
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
         }).catchError((error) => print("Failed to update Exercise history: $error"));
 
       } else {
         final uid = exerciseHistoryCollection.doc().id;
 
         CaloHistory caloHistory =
-        CaloHistory(uid, 'lCIdlGoR2V2HPOEOFkF9', dateHistory, foodHistoryList, exerciseHistory);
+        CaloHistory(uid, widget.userID, widget.dateHistory, foodHistoryList, exerciseHistory);
 
         await exerciseHistoryCollection
             .doc(caloHistory.CaloHistoryID)
@@ -157,6 +151,8 @@ class _ExerciseState extends State<ExercisePage> {
             .then((value) {
           print("Exercise history Added\nUID:${caloHistory.CaloHistoryID}");
           Navigator.pop(context);
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
         }).catchError((error) => print("Failed to add Exercise history: $error"));
       }
     } on Exception catch (e) {
@@ -173,7 +169,8 @@ class _ExerciseState extends State<ExercisePage> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID))),
         ),
         title: Text('Bài tập luyện sức khỏe'),
         titleTextStyle: GoogleFonts.getFont(
@@ -406,7 +403,8 @@ class _ExerciseState extends State<ExercisePage> {
                                             top: -40,
                                             child: InkResponse(
                                               onTap: () {
-                                                Navigator.of(context).pop();
+                                                Navigator.pushReplacement(context,
+                                                    MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
                                               },
                                               child: CircleAvatar(
                                                 backgroundColor:

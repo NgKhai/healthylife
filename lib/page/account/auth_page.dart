@@ -20,7 +20,8 @@ class AuthPage extends StatelessWidget{
           if(snapshot.connectionState == ConnectionState.active){
             User? user = snapshot.data;
             if(user !=null){
-              return HomeBottomNavigation(userHealthy: UserHealthy('lCIdlGoR2V2HPOEOFkF9', 'nguyenkhai1470@gmail.com', 'test123456', 'Nguyễn Khải', 'https://static.vecteezy.com/system/resources/previews/011/459/666/original/people-avatar-icon-png.png', DateTime.now()));
+              // return HomeBottomNavigation(userHealthy: UserHealthy('lCIdlGoR2V2HPOEOFkF9', 'nguyenkhai1470@gmail.com', 'test123456', 'Nguyễn Khải', 'https://static.vecteezy.com/system/resources/previews/011/459/666/original/people-avatar-icon-png.png', '14/11/2003'));
+              return AddInfo();
             } else{
               return LoginPage();
             }

@@ -45,97 +45,17 @@ class _CaloChartWidgetState extends State<CaloChartWidget> {
   @override
   void initState() {
     super.initState();
-    // fetchData();
     getTimeDataHistory();
-  }
-
-  // void fetchData() {
-  //   final now = DateTime.now();
-  //
-  //   timeDataList = [
-  //     TimeData(domain: DateTime(2024, 3, 17), measure: 2100),
-  //     TimeData(domain: DateTime(2024, 3, 18), measure: 1900),
-  //     TimeData(domain: DateTime(2024, 3, 19), measure: 1800),
-  //     TimeData(domain: DateTime(2024, 3, 20), measure: 2000),
-  //     TimeData(domain: DateTime(2024, 3, 21), measure: 500),
-  //     TimeData(domain: DateTime(2024, 3, 22), measure: 1600),
-  //     TimeData(domain: DateTime(2024, 3, 23), measure: 2500),
-  //     // TimeData(domain: now.subtract(Duration(days: 6)), measure: 1200),
-  //     // TimeData(domain: now.subtract(Duration(days: 5)), measure: 2200),
-  //     // TimeData(domain: now.subtract(Duration(days: 4)), measure: 2600),
-  //     // TimeData(domain: now.subtract(Duration(days: 3)), measure: 2200),
-  //     // TimeData(domain: now.subtract(Duration(days: 2)), measure: 2100),
-  //     // TimeData(domain: now.subtract(Duration(days: 1)), measure: 700),
-  //     // TimeData(domain: now.subtract(Duration(days: 0)), measure: 900),
-  //   ];
-  //
-  //   timeGroupList.add(
-  //     TimeGroup(
-  //       id: '1',
-  //       data: timeDataList,
-  //     ),
-  //   );
-  //
-  //   setState(() {});
-  // }
-
-  Future<void> fetchData() async {
-    setState(() {
-      totalCalo = [];
-
-      exerciseHistories.clear();
-      exercises.clear();
-
-      foodHistories.clear();
-      foods.clear();
-    });
-
-    // Lấy dữ liệu từ Exercise History
-    // await getCaloHistory(widget.userID);
-
-
-    if (exerciseHistories.isNotEmpty || foodHistories.isNotEmpty) {
-      await getExerciseAndFood();
-    }
-
-
-
-    setState(() {
-
-    });
   }
 
   Future<void> getTimeDataHistory() async {
     final now = DateTime.now();
-    //
-    // await getMeasure(DateTime(now.year, now.month, now.day));
-    //
-    // await getMeasure(DateTime(now.year, now.month, now.day));
 
     for(int i = 0; i < 7; i++) {
       await getMeasure(DateTime(now.year, now.month, now.day - i));
       timeDataList.add(TimeData(domain: DateTime(now.year, now.month, now.day - i), measure: totalCalo[i]));
       print(totalCalo[i]);
     }
-
-    // timeDataList = [
-    //   // TimeData(domain: now.subtract(Duration(days: 6)), measure: 2100),
-    //   // TimeData(domain: now.subtract(Duration(days: 5)), measure: 1900),
-    //   // TimeData(domain: now.subtract(Duration(days: 4)), measure: 1800),
-    //   // TimeData(domain: now.subtract(Duration(days: 3)), measure: 2000),
-    //   // TimeData(domain: now.subtract(Duration(days: 2)), measure: 500),
-    //   // TimeData(domain: now.subtract(Duration(days: 1)), measure: 1600),
-    //   // TimeData(domain: now, measure: 2500),
-    //   TimeData(domain: DateTime(now.year, now.month, now.day - 6), measure: 2100),
-    //   TimeData(domain: DateTime(now.year, now.month, now.day - 5), measure: 1900),
-    //   TimeData(domain: DateTime(now.year, now.month, now.day - 4), measure: 1800),
-    //   TimeData(domain: DateTime(now.year, now.month, now.day - 3), measure: 2000),
-    //   TimeData(domain: DateTime(now.year, now.month, now.day - 2), measure: 500),
-    //   TimeData(domain: DateTime(now.year, now.month, now.day - 1), measure: 1600),
-    //   TimeData(domain: DateTime(now.year, now.month, now.day), measure: totalCalo[0]),
-    // ];
-
-    print("ok");
 
     timeGroupList.add(
       TimeGroup(

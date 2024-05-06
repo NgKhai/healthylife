@@ -1,13 +1,17 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gauge_indicator/gauge_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/util/color_theme.dart';
+import 'package:intl/intl.dart';
 
 import '../../page/bmi/bmi_page.dart';
 
 class HomeBMIGaugeWidget extends StatefulWidget {
 
-  const HomeBMIGaugeWidget({super.key});
+  String userID;
+
+  HomeBMIGaugeWidget({super.key, required this.userID});
 
   @override
   State<HomeBMIGaugeWidget> createState() => _HomeBMIGaugeWidgetState();
@@ -15,10 +19,59 @@ class HomeBMIGaugeWidget extends StatefulWidget {
 
 class _HomeBMIGaugeWidgetState extends State<HomeBMIGaugeWidget> {
 
+  num userBMI = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
   Future<void> fetchData() async {
 
-    print('Fetch data Home BMI Gauge');
+    setState(() {
+      userBMI = 0;
+    });
 
+    String currentDate = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    await getUserDetail(widget.userID, currentDate);
+
+  }
+
+  Future<void> getUserDetail(String userID, String dateHistory) async {
+    try {
+      // lấy dữ liệu CaloHistory thông qua userID và date history
+      final userDetailQuerySnapshot = await FirebaseFirestore.instance
+          .collection('UserDetail')
+          .where('UserID', isEqualTo: userID)
+          .where('DateHistory', isEqualTo: dateHistory)
+          .get();
+
+      // Nếu dữ liệu tồn tại
+      if (userDetailQuerySnapshot.docs.isNotEmpty) {
+        // lấy id document
+        final document = userDetailQuerySnapshot.docs.first;
+        final BMI = document['UserBMI'];
+
+        setState(() {
+          userBMI = BMI;
+        });
+      } else {
+        await Future.delayed(Duration(seconds: 1));
+        await getUserDetail(userID, dateHistory);
+      }
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
+  }
+
+  String checkStatus(num bmi) {
+    return bmi > 0 && bmi < 18.5 ? "GẦY"
+        : bmi < 25 ? "BÌNH THƯỜNG"
+        : bmi < 30 ? "THỪA CÂN"
+        : bmi < 35 ? "BÉO PHÌ CẤP ĐỘ 1"
+        : bmi < 40 ? "BÉO PHÌ CẤP ĐỘ 2"
+        : ""; // Rỗng
   }
 
   @override
@@ -26,7 +79,7 @@ class _HomeBMIGaugeWidgetState extends State<HomeBMIGaugeWidget> {
     return InkWell(
       onTap: () {
         Navigator.push(context,
-            MaterialPageRoute(builder: (context) => BMIPage()));
+            MaterialPageRoute(builder: (context) => BMIPage(userID: widget.userID)));
       },
       child: Container(
         decoration: BoxDecoration(
@@ -80,7 +133,7 @@ class _HomeBMIGaugeWidgetState extends State<HomeBMIGaugeWidget> {
                                 ),
                                 value: value,
                               ),
-                          value: 20.5,
+                          value: userBMI.toDouble(),
                           radius: 70,
                           // Chỉnh độ to nhỏ của gauge
                           curve: Curves.elasticOut,
@@ -155,7 +208,7 @@ class _HomeBMIGaugeWidgetState extends State<HomeBMIGaugeWidget> {
                         ),
                         SizedBox(height: MediaQuery.of(context).size.height *0.02),
                         Text(
-                          'CÂN ĐỐI',
+                          checkStatus(userBMI),
                           textAlign: TextAlign.center,
                           style: GoogleFonts.getFont(
                             'Montserrat',
