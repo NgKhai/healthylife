@@ -300,8 +300,8 @@ class _LoginState extends State<LoginPage>{
                           ),
                         ),
                         onPressed: () {
-                          signInWithEmailAndPassword();
-                          // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation(userHealthy: UserHealthy('lCIdlGoR2V2HPOEOFkF9', 'nguyenkhai1470@gmail.com', 'test123456', 'Nguyễn Khải', 'https://static.vecteezy.com/system/resources/previews/011/459/666/original/people-avatar-icon-png.png', '14/11/2003'))));
+                          // signInWithEmailAndPassword();
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation(userHealthy: UserHealthy('af9keW5nIeo0EPJVu3VJ', 'nguyenkhai1470@gmail.com', 'Nam', 'Nguyễn Khải', '14/11/2003'))));
                         },
                         child: Text('Đăng nhập'.toUpperCase(),
                           style: GoogleFonts.getFont(

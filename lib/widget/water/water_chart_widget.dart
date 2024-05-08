@@ -1,49 +1,44 @@
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:d_chart/commons/axis.dart';
 import 'package:d_chart/commons/config_render.dart';
 import 'package:d_chart/commons/enums.dart';
 import 'package:d_chart/time/line.dart';
 import 'package:flutter/material.dart';
 import 'package:d_chart/commons/data_model.dart';
+import 'package:intl/intl.dart';
 
 class WaterChartWidget extends StatefulWidget {
-  const WaterChartWidget({super.key});
+
+  String userID;
+
+  WaterChartWidget({super.key, required this.userID});
 
   @override
   State<WaterChartWidget> createState() => _WaterChartWidgetState();
 }
 
 class _WaterChartWidgetState extends State<WaterChartWidget> {
-  late List<TimeData> timeDataList;
+  late List<TimeData> timeDataList = [];
 
   final List<TimeGroup> timeGroupList = [];
+
+  List<num> waterList = [];
 
   @override
   void initState() {
     super.initState();
-    generateRandomData();
+    getTimeDataHistory();
   }
 
-  void generateRandomData() {
+  Future<void> getTimeDataHistory() async {
     final now = DateTime.now();
 
-    timeDataList = [
-      TimeData(domain: DateTime(2024, 3, 17), measure: 2100),
-      TimeData(domain: DateTime(2024, 3, 18), measure: 1900),
-      TimeData(domain: DateTime(2024, 3, 19), measure: 1800),
-      TimeData(domain: DateTime(2024, 3, 20), measure: 2000),
-      TimeData(domain: DateTime(2024, 3, 21), measure: 2200),
-      TimeData(domain: DateTime(2024, 3, 22), measure: 1600),
-      TimeData(domain: DateTime(2024, 3, 23), measure: 2500),
-      // TimeData(domain: now.subtract(Duration(days: 6)), measure: 1200),
-      // TimeData(domain: now.subtract(Duration(days: 5)), measure: 2200),
-      // TimeData(domain: now.subtract(Duration(days: 4)), measure: 2600),
-      // TimeData(domain: now.subtract(Duration(days: 3)), measure: 2200),
-      // TimeData(domain: now.subtract(Duration(days: 2)), measure: 2100),
-      // TimeData(domain: now.subtract(Duration(days: 1)), measure: 700),
-      // TimeData(domain: now.subtract(Duration(days: 0)), measure: 900),
-    ];
+    for(int i = 0; i < 7; i++) {
+      await getWaterHistory(widget.userID, DateTime(now.year, now.month, now.day - i));
+      timeDataList.add(TimeData(domain: DateTime(now.year, now.month, now.day - i), measure: waterList[i]));
+    }
 
     timeGroupList.add(
       TimeGroup(
@@ -51,8 +46,36 @@ class _WaterChartWidgetState extends State<WaterChartWidget> {
         data: timeDataList,
       ),
     );
+  }
 
-    setState(() {});
+  Future<void> getWaterHistory(String userID, DateTime dateTime) async {
+    try {
+      String dateHistory = DateFormat('dd/MM/yyyy').format(dateTime);
+
+      final userDetailQuerySnapshot = await FirebaseFirestore.instance
+          .collection('WaterHistory')
+          .where('UserID', isEqualTo: userID)
+          .where('DateHistory', isEqualTo: dateHistory)
+          .get();
+
+      // Nếu dữ liệu tồn tại
+      if (userDetailQuerySnapshot.docs.isNotEmpty) {
+        // lấy id document
+        final document = userDetailQuerySnapshot.docs.first;
+
+        final capacity = document['Capacity'];
+
+        setState(() {
+          waterList.add(capacity);
+        });
+      } else {
+        setState(() {
+          waterList.add(0);
+        });
+      }
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
   }
 
   @override

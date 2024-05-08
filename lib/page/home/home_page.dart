@@ -4,10 +4,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/page/bmi/bmi_page.dart';
 import 'package:healthylife/page/calo/calo_page.dart';
 import 'package:healthylife/page/fat/fat_page.dart';
+import 'package:healthylife/page/water/water.dart';
 import 'package:healthylife/util/color_theme.dart';
 import 'package:healthylife/widget/home/home_bmi_gauge_widget.dart';
 import 'package:healthylife/widget/home/home_exercise_widget.dart';
 import 'package:healthylife/widget/home/home_fat_gauge_widget.dart';
+import 'package:healthylife/widget/home/home_water_gauge_widget.dart';
 import 'package:intl/intl.dart';
 
 import '../../model/UserHealthy.dart';
@@ -149,26 +151,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: Offset(0, 3), // changes position of shadow
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(15.0),
-                  child: Container(
-                    height: 150,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              HomeWaterGaugeWidget(userID: widget.userHealthy.UserID),
               SizedBox(height: MediaQuery.of(context).size.height * 0.03),
               Row(
                 mainAxisSize: MainAxisSize.max,

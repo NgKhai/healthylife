@@ -132,17 +132,25 @@
 //   }
 // }
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:healthylife/model/CustomExercise.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'dart:math' as math;
 
+import '../../model/UserDetail.dart';
+
 
 class WalkingPage extends StatefulWidget {
-  const WalkingPage({super.key});
+
+  UserDetail userDetail;
+
+  WalkingPage({super.key, required this.userDetail});
 
   @override
   State<WalkingPage> createState() => _WalkingPageState();
@@ -153,18 +161,63 @@ class _WalkingPageState extends State<WalkingPage> {
   LatLng? currentLocation;
   List<LatLng> positions = []; // List to store tracked positions
   bool isTracking = false;
+  late DateTime startTime = DateTime.now(); // Variable to store the start time
+  late DateTime endTime = DateTime.now(); // Variable to store the end time
+
   double speed = 0.0; // Movement speed in m/s
+  num calorieBurnPerSecond = 0;
+  num duration = 0;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     clearTrackingData();
+    print(widget.userDetail.UserWeight);
+  }
+
+  Future<void> updateWalking(String userID, String dateHistory) async {
+    final walkingCollection =
+    FirebaseFirestore.instance.collection('CustomExercise');
+
+    final walkingQuerySnapshot = await walkingCollection
+        .where('UserID', isEqualTo: userID)
+        .where('DateHistory', isEqualTo: dateHistory)
+        .get();
+
+    if (walkingQuerySnapshot.docs.isNotEmpty) {
+      final document = walkingQuerySnapshot.docs.first;
+
+      num _calories = document['CustomExerciseCalo'] + calorieBurnPerSecond;
+      num _duration = document['CustomExerciseDuration'] + duration;
+
+      print(_calories);
+      print(calorieBurnPerSecond);
+
+      await walkingCollection
+          .doc(document.id)
+          .update({'CustomExerciseCalo': _calories, 'CustomExerciseDuration': _duration});
+
+      // Nếu dữ liệu chưa có sẽ tạo rỗng
+    } else {
+      final uid = walkingCollection.doc().id;
+
+      CustomExercise customExercise = CustomExercise(uid, widget.userDetail.UserID, 'Chạy bộ', calorieBurnPerSecond, duration, getDate(DateTime.now()));
+
+      await walkingCollection
+          .doc(customExercise.CustomExerciseID)
+          .set(customExercise.toJson());
+    }
   }
 
   void clearTrackingData() {
-    positions.clear();
-    _stopTracking();
+    setState(() {
+      positions.clear();
+      isTracking = false;
+      speed = 0;
+      calorieBurnPerSecond = 0;
+      duration = 0;
+    });
   }
 
   Future<void> _getCurrentLocation() async {
@@ -182,6 +235,7 @@ class _WalkingPageState extends State<WalkingPage> {
     positions.add(currentLocation!); // Add initial position
     setState(() {
       isTracking = true;
+      startTime = DateTime.now();
     });
     _trackLocation();
   }
@@ -190,7 +244,9 @@ class _WalkingPageState extends State<WalkingPage> {
     setState(() {
       isTracking = false;
       speed = 0;
+      endTime = DateTime.now();
     });
+    _calculateDuration();
   }
 
   void _trackLocation() async {
@@ -216,12 +272,27 @@ class _WalkingPageState extends State<WalkingPage> {
       // Schedule next location update (adjust interval as needed for performance)
       Future.delayed(const Duration(milliseconds: 500), _trackLocation); // Update every 500ms
 
-      _calculateCalorieBurn(speed, 175, 70);
+      await _calculateCalorieBurn(speed, widget.userDetail.UserHeight, widget.userDetail.UserWeight);
 
     }
   }
 
-  double _calculateCalorieBurn(double speed, double weight, double height) {
+  String getDate(DateTime _selectedDate) {
+    return DateFormat('dd/MM/yyyy').format(_selectedDate);
+  }
+
+  void _calculateDuration() {
+    // Calculate the duration in seconds
+    final durationInSeconds = endTime.difference(startTime).inSeconds;
+
+    setState(() {
+      duration = durationInSeconds / 60;
+    });
+
+    print('Duration: ${duration.toStringAsFixed(2)} minutes');
+  }
+
+  _calculateCalorieBurn(double speed, num weight, num height) {
     // Constants
     const double speedFactor = 2.0;
     const double weightFactor = 0.035;
@@ -231,43 +302,14 @@ class _WalkingPageState extends State<WalkingPage> {
     double calorieBurnPerMinute = (weightFactor * weight) +
         ((speed * speedFactor) / height) * heightFactor * weight;
 
-    // Convert calorie burn per minute to total calorie burn
-    calorieBurnPerMinute *= 60; // Convert to per hour
-
     print("Speed: " + speed.toString());
 
-    print(calorieBurnPerMinute);
+    setState(() {
+      // Convert calorie burn per minute to per second
+      calorieBurnPerSecond += calorieBurnPerMinute / 60; // Convert to per second
+    });
 
-    return calorieBurnPerMinute;
-  }
-
-
-
-  final timestamps = Map<LatLng,
-      DateTime>(); // Map positions to timestamps for speed calculation
-
-  double distanceBetween(LatLng p1, LatLng p2) {
-    // Haversine formula to calculate distance between two LatLng points (in meters)
-    final R = 6371e3; // Earth's radius in meters
-    final lat1 = degreesToRadians(p1.latitude);
-    final lon1 = degreesToRadians(p1.longitude);
-    final lat2 = degreesToRadians(p2.latitude);
-    final lon2 = degreesToRadians(p2.longitude);
-
-    final dLat = lat2 - lat1;
-    final dLon = lon2 - lon1;
-
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(lat1) * math.cos(lat2) * math.sin(dLon / 2) *
-            math.sin(dLon / 2);
-    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-    final distance = R * c;
-
-    return distance;
-  }
-
-  double degreesToRadians(double degrees) {
-    return degrees * math.pi / 180;
+    print(calorieBurnPerSecond);
   }
 
   @override
@@ -318,11 +360,13 @@ class _WalkingPageState extends State<WalkingPage> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (!isTracking) {
                     _startTracking();
                   } else {
                     _stopTracking();
+                    await updateWalking(widget.userDetail.UserID, getDate(DateTime.now()));
+                    clearTrackingData();
                   }
                 },
                 child: Text(isTracking ? 'Stop' : 'Start'),

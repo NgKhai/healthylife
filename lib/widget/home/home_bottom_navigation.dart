@@ -24,6 +24,8 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
   int _currentIndex = 0;
   PageController _pageController = PageController();
   late List<Widget> _pages;
+  late UserDetail userDetail;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -35,14 +37,20 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
 
 
   void fetchData() async {
+    userDetail = UserDetail('', '', 0, 0, 0, 0, 0, 0, '');
+
+    await getUserDetail(widget.userHealthy.UserID, DateTime.now());
+
     _pages = [
     HomePage(userHealthy: widget.userHealthy),
     // FoodCaloPage(),
-    WalkingPage(),
+    WalkingPage(userDetail: userDetail),
     SettingPage(),
     ];
 
-    await getUserDetail(widget.userHealthy.UserID, DateTime.now());
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   void _onItemTapped(int index) {
@@ -123,17 +131,21 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
 
             final document = previousUserDetailQuerySnapshot.docs.first;
 
-            UserDetail userDetail = UserDetail.fromFirestore(document);
+            UserDetail _userDetail = UserDetail.fromFirestore(document);
 
-            userDetail.UserDetailID = uid;
-            userDetail.DateHistory = previousDateHistory;
+            _userDetail.UserDetailID = uid;
+            _userDetail.DateHistory = previousDateHistory;
 
             await userDetailCollection
-                .doc(userDetail.UserDetailID)
-                .set(userDetail.toJson())
+                .doc(_userDetail.UserDetailID)
+                .set(_userDetail.toJson())
                 .then((value) {
 
             }).catchError((error) => print("Failed to get user detail: $error"));
+
+            setState(() {
+              userDetail = _userDetail;
+            });
           }
         }
 
@@ -143,7 +155,13 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
           // Handle the case where no data is found within the limit
         }
       } else {
-        // Data exists for the given date, handle accordingly
+        final document = userDetailQuerySnapshot.docs.first;
+
+        UserDetail _userDetail = UserDetail.fromFirestore(document);
+
+        setState(() {
+          userDetail = _userDetail;
+        });
       }
     } catch (error) {
       print('Error fetching data: $error');
@@ -152,7 +170,8 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return _isLoading ? _loadingWidget()
+        :Scaffold(
       body:  PageView(
         controller: _pageController,
         onPageChanged: (index) {
@@ -180,6 +199,35 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
             label: 'Info',
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _loadingWidget() {
+    return Scaffold(
+      backgroundColor: Colors.grey[200], // Background color
+      body: Center(
+        child: Container(
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.5),
+                spreadRadius: 2,
+                blurRadius: 7,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+            ), // You can customize this CircularProgressIndicator to match your theme
+          ),
+        ), // Use the custom loader widget
       ),
     );
   }
