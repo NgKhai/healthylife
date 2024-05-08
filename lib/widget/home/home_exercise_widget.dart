@@ -29,7 +29,7 @@ class _HomeExerciseWidgetState extends State<HomeExerciseWidget> {
   void fetchData() async {
     await getExercise();
 
-    getRandomExercise();
+    await getRandomExercise();
 
     setState(() {
       isLoading = false;

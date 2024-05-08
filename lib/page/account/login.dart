@@ -301,7 +301,7 @@ class _LoginState extends State<LoginPage>{
                         ),
                         onPressed: () {
                           // signInWithEmailAndPassword();
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation(userHealthy: UserHealthy('af9keW5nIeo0EPJVu3VJ', 'nguyenkhai1470@gmail.com', 'Nam', 'Nguyễn Khải', '14/11/2003'))));
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation(userHealthy: UserHealthy('rAPOP7jnV5GSYTio7zdS', 'nguyenkhai1470@gmail.com', 'Nam', 'Nguyễn Khải', '14/11/2003'))));
                         },
                         child: Text('Đăng nhập'.toUpperCase(),
                           style: GoogleFonts.getFont(
