@@ -6,7 +6,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:healthylife/model/UserHealthy.dart';
 import 'package:healthylife/page/account/auth_page.dart';
 import 'package:healthylife/page/account/register.dart';
-import 'package:healthylife/page/account/splashscreen.dart';
+import 'package:healthylife/page/account/first_screen.dart';
 import 'package:healthylife/page/add_info/addinfo.dart';
 import 'package:healthylife/page/auth.dart';
 import 'package:healthylife/page/home/home_page.dart';
@@ -153,7 +153,7 @@ class _LoginState extends State<LoginPage>{
               left: -10,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => SplashScreenPage()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => FirstScreenPage()));
                   //Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
@@ -300,8 +300,8 @@ class _LoginState extends State<LoginPage>{
                           ),
                         ),
                         onPressed: () {
-                          // signInWithEmailAndPassword();
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation(userHealthy: UserHealthy('rAPOP7jnV5GSYTio7zdS', 'nguyenkhai1470@gmail.com', 'Nam', 'Nguyễn Khải', '14/11/2003'))));
+                          signInWithEmailAndPassword();
+                          // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeBottomNavigation(userHealthy: UserHealthy('rAPOP7jnV5GSYTio7zdS', 'nguyenkhai1470@gmail.com', 'Nam', 'Nguyễn Khải', '14/11/2003'))));
                         },
                         child: Text('Đăng nhập'.toUpperCase(),
                           style: GoogleFonts.getFont(

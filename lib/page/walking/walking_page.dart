@@ -133,11 +133,14 @@
 // }
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/model/CustomExercise.dart';
+import 'package:healthylife/util/color_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -145,9 +148,7 @@ import 'dart:math' as math;
 
 import '../../model/UserDetail.dart';
 
-
 class WalkingPage extends StatefulWidget {
-
   UserDetail userDetail;
 
   WalkingPage({super.key, required this.userDetail});
@@ -162,11 +163,11 @@ class _WalkingPageState extends State<WalkingPage> {
   List<LatLng> positions = []; // List to store tracked positions
   bool isTracking = false;
   late DateTime startTime = DateTime.now(); // Variable to store the start time
-  late DateTime endTime = DateTime.now(); // Variable to store the end time
 
   double speed = 0.0; // Movement speed in m/s
   num calorieBurnPerSecond = 0;
   num duration = 0;
+  num distance = 0;
 
   @override
   void initState() {
@@ -178,7 +179,7 @@ class _WalkingPageState extends State<WalkingPage> {
 
   Future<void> updateWalking(String userID, String dateHistory) async {
     final walkingCollection =
-    FirebaseFirestore.instance.collection('CustomExercise');
+        FirebaseFirestore.instance.collection('CustomExercise');
 
     final walkingQuerySnapshot = await walkingCollection
         .where('UserID', isEqualTo: userID)
@@ -194,15 +195,22 @@ class _WalkingPageState extends State<WalkingPage> {
       print(_calories);
       print(calorieBurnPerSecond);
 
-      await walkingCollection
-          .doc(document.id)
-          .update({'CustomExerciseCalo': _calories, 'CustomExerciseDuration': _duration});
+      await walkingCollection.doc(document.id).update({
+        'CustomExerciseCalo': _calories,
+        'CustomExerciseDuration': _duration
+      });
 
       // Nếu dữ liệu chưa có sẽ tạo rỗng
     } else {
       final uid = walkingCollection.doc().id;
 
-      CustomExercise customExercise = CustomExercise(uid, widget.userDetail.UserID, 'Chạy bộ', calorieBurnPerSecond, duration, getDate(DateTime.now()));
+      CustomExercise customExercise = CustomExercise(
+          uid,
+          widget.userDetail.UserID,
+          'Chạy bộ',
+          calorieBurnPerSecond,
+          duration,
+          getDate(DateTime.now()));
 
       await walkingCollection
           .doc(customExercise.CustomExerciseID)
@@ -225,7 +233,10 @@ class _WalkingPageState extends State<WalkingPage> {
         desiredAccuracy: LocationAccuracy.high);
     setState(() {
       currentLocation = LatLng(locationData.latitude, locationData.longitude);
-      print("Latitude: " + locationData.latitude.toString() + " | Longitude: " + locationData.longitude.toString());
+      print("Latitude: " +
+          locationData.latitude.toString() +
+          " | Longitude: " +
+          locationData.longitude.toString());
     });
   }
 
@@ -244,36 +255,36 @@ class _WalkingPageState extends State<WalkingPage> {
     setState(() {
       isTracking = false;
       speed = 0;
-      endTime = DateTime.now();
     });
-    _calculateDuration();
   }
 
   void _trackLocation() async {
     if (isTracking) {
-
       final locationData = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
       final newPosition = LatLng(locationData.latitude, locationData.longitude);
       positions.add(newPosition); // Add new position to trail
 
-      print("Latitude: ${locationData.latitude} | Longitude: ${locationData.longitude}");
+      print(
+          "Latitude: ${locationData.latitude} | Longitude: ${locationData.longitude}");
       print("This is speed: " + locationData.speed.toString());
 
       // Update current speed with the instantaneous speed provided by locationData
       setState(() {
-        speed = locationData.speed ?? 0.0; // Use 0.0 as default speed if speed is null
+        speed = locationData.speed ??
+            0.0; // Use 0.0 as default speed if speed is null
         currentLocation = newPosition;
       });
 
       _mapController.move(
           currentLocation!, 18); // Keep map centered on current location
 
-      // Schedule next location update (adjust interval as needed for performance)
-      Future.delayed(const Duration(milliseconds: 500), _trackLocation); // Update every 500ms
+      await _calculateCalorieBurn(
+          speed, widget.userDetail.UserHeight, widget.userDetail.UserWeight);
 
-      await _calculateCalorieBurn(speed, widget.userDetail.UserHeight, widget.userDetail.UserWeight);
+      await _calculateDistance();
 
+      _calculateDuration();
     }
   }
 
@@ -281,9 +292,26 @@ class _WalkingPageState extends State<WalkingPage> {
     return DateFormat('dd/MM/yyyy').format(_selectedDate);
   }
 
-  void _calculateDuration() {
+  String getFormatDuration(num minutes) {
+    if(minutes < 1) {
+      return "${(duration * 60).toStringAsFixed(0)} giây";
+    } else {
+      int totalSeconds = (minutes * 60).floor();
+      int minutesPart = totalSeconds ~/ 60;
+      int secondsPart = totalSeconds % 60;
+      String formattedDuration = '$minutesPart phút ';
+
+      if (secondsPart > 0) {
+        formattedDuration += '$secondsPart giây';
+      }
+
+      return formattedDuration + " ";
+    }
+  }
+
+  _calculateDuration() {
     // Calculate the duration in seconds
-    final durationInSeconds = endTime.difference(startTime).inSeconds;
+    final durationInSeconds = DateTime.now().difference(startTime).inSeconds;
 
     setState(() {
       duration = durationInSeconds / 60;
@@ -306,77 +334,270 @@ class _WalkingPageState extends State<WalkingPage> {
 
     setState(() {
       // Convert calorie burn per minute to per second
-      calorieBurnPerSecond += calorieBurnPerMinute / 60; // Convert to per second
+      calorieBurnPerSecond +=
+          calorieBurnPerMinute / 60; // Convert to per second
     });
 
     print(calorieBurnPerSecond);
   }
 
+  _calculateDistance() {
+    distance = 0.0;
+    for (int i = 0; i < positions.length - 1; i++) {
+      double _distance = Geolocator.distanceBetween(
+        positions[i].latitude,
+        positions[i].longitude,
+        positions[i + 1].latitude,
+        positions[i + 1].longitude,
+      );
+      distance += _distance;
+    }
+    // Chuyển đổi từ mét sang kilômét
+    distance /= 1000;
+
+    // Sử dụng biểu thức điều kiện để quyết định cách hiển thị dữ liệu
+    if (distance < 1) {
+      // Nếu khoảng cách nhỏ hơn 1km, hiển thị trong mét
+      print("Distance: ${(distance * 1000).toStringAsFixed(0)} m");
+    } else {
+      // Ngược lại, hiển thị trong kilômét
+      print("Distance: ${distance.toStringAsFixed(2)} km");
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
+      body: Stack(
+        alignment: AlignmentDirectional.bottomEnd,
         children: [
-          Expanded(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                center: LatLng(10.776183323564736, 106.66732187988492),
-                zoom: 16,
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                ),
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: positions,
-                      color: Colors.blue,
-                      strokeWidth: 6,
-                    ),
-                  ],
-                ),
-
-                CurrentLocationLayer(
-                  alignDirectionOnUpdate: AlignOnUpdate.always,
-                  followOnLocationUpdate: FollowOnLocationUpdate.always,
-                  turnOnHeadingUpdate: TurnOnHeadingUpdate.never,
-                  style: LocationMarkerStyle(
-                    marker: const DefaultLocationMarker(
-                      child: Icon(
-                        Icons.navigation,
-                        color: Colors.white,
-                      ),
-                    ),
-                    markerSize: const Size(40, 40),
-                    markerDirection: MarkerDirection.heading,
-                  ),
-                ),
-              ],
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              center: LatLng(10.776183323564736, 106.66732187988492),
+              zoom: 16,
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              ElevatedButton(
-                onPressed: () async {
-                  if (!isTracking) {
-                    _startTracking();
-                  } else {
-                    _stopTracking();
-                    await updateWalking(widget.userDetail.UserID, getDate(DateTime.now()));
-                    clearTrackingData();
-                  }
-                },
-                child: Text(isTracking ? 'Stop' : 'Start'),
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               ),
-              Text('Speed: ${speed.toStringAsFixed(2)} m/s'),
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: positions,
+                    color: Colors.blue,
+                    strokeWidth: 6,
+                  ),
+                ],
+              ),
+              CurrentLocationLayer(
+                alignDirectionOnUpdate: AlignOnUpdate.always,
+                followOnLocationUpdate: FollowOnLocationUpdate.always,
+                turnOnHeadingUpdate: TurnOnHeadingUpdate.never,
+                style: LocationMarkerStyle(
+                  marker: const DefaultLocationMarker(
+                    child: Icon(
+                      Icons.navigation,
+                      color: Colors.white,
+                    ),
+                  ),
+                  markerSize: const Size(40, 40),
+                  markerDirection: MarkerDirection.heading,
+                ),
+              ),
             ],
           ),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          //   children: [
+          //     ElevatedButton(
+          //       onPressed: () async {
+          //         if (!isTracking) {
+          //           _startTracking();
+          //         } else {
+          //           _stopTracking();
+          //           await updateWalking(widget.userDetail.UserID, getDate(DateTime.now()));
+          //           clearTrackingData();
+          //         }
+          //       },
+          //       child: Text(isTracking ? 'Stop' : 'Start'),
+          //     ),
+          //     Text('Speed: ${speed.toStringAsFixed(2)} m/s'),
+          //   ],
+          // ),
+          Container(
+            height: MediaQuery.of(context).size.height * 1 / 4,
+            width: MediaQuery.of(context).size.width,
+            decoration: BoxDecoration(
+              color: ColorTheme.backgroundColor,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(40),
+                topRight: Radius.circular(40),
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Container(
+                  width: MediaQuery.of(context).size.width * 5/6,
+                  height: MediaQuery.of(context).size.width * 0.12,
+                  child: ElevatedButton(
+                    style: isTracking
+                        ? ElevatedButton.styleFrom(
+                            backgroundColor: ColorTheme.backgroundColor,
+                            // màu nền của button
+                            foregroundColor: Colors.white,
+                            // màu chữ của button
+                            shape: RoundedRectangleBorder(
+                              // border radius của button
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(color: Colors.white, width: 2),
+                            ),
+                          )
+                        : ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            // màu nền của button
+                            foregroundColor: ColorTheme.backgroundColor,
+                            // màu chữ của button
+                            shape: RoundedRectangleBorder(
+                              // border radius của button
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(color: Colors.white, width: 2),
+                            ),
+                          ),
+                    onPressed: () async {
+                      if (!isTracking) {
+                        _startTracking();
+                      } else {
+                        _stopTracking();
+                        await updateWalking(
+                            widget.userDetail.UserID, getDate(DateTime.now()));
+                        // clearTrackingData();
+                      }
+                    },
+                    child: Text(isTracking ? 'Dừng' : 'Bắt đầu',
+                      style: GoogleFonts.getFont(
+                        'Montserrat',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+
+                  ),
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Vận tốc: ',
+                              style: GoogleFonts.getFont(
+                                'Montserrat',
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              speed.toStringAsFixed(2),
+                              style: GoogleFonts.getFont(
+                                'Montserrat',
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            Text(
+                              ' m/s',
+                              style: GoogleFonts.getFont(
+                                'Montserrat',
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Quãng đường đã đi được: ',
+                              style: GoogleFonts.getFont(
+                                'Montserrat',
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              distance < 1 ? "${(distance * 1000).toStringAsFixed(0)} m" : "${distance.toStringAsFixed(2)} km",
+                              style: GoogleFonts.getFont(
+                                'Montserrat',
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Calo đã tiêu thụ: ',
+                              style: GoogleFonts.getFont(
+                                'Montserrat',
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              "${calorieBurnPerSecond.toStringAsFixed(0)} calo",
+                              style: GoogleFonts.getFont(
+                                'Montserrat',
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Thời gian đã đi được: ',
+                              style: GoogleFonts.getFont(
+                                'Montserrat',
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              getFormatDuration(duration),
+                              style: GoogleFonts.getFont(
+                                'Montserrat',
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                )
+
+              ],
+            ),
+          )
         ],
       ),
-      
     );
   }
 }

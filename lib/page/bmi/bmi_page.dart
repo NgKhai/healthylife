@@ -51,7 +51,7 @@ class _BMIPageState extends State<BMIPage> {
             onPressed: () {},
             icon: Icon(
               Icons.settings,
-              color: Colors.white,
+              color: ColorTheme.lightGreenColor,
             ),
           ),
         ],

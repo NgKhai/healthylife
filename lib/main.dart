@@ -4,10 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:healthylife/CRUD/page/food_manager.dart';
-import 'package:healthylife/page/account/splashscreen.dart';
+import 'package:healthylife/page/account/first_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:healthylife/page/food_calo/food_calo.dart';
 import 'package:healthylife/page/home/home_page.dart';
+import 'package:healthylife/page/splash/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: [const Locale('vi', 'VN')],
-      home: SplashScreenPage(),
+      home: SplashScreen(),
       // home: FoodManager(), // Mở comment này nếu muốn add dữ liệu món ăn
     );
   }

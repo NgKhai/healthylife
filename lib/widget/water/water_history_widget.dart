@@ -373,36 +373,25 @@ class _WaterHistoryWidgetState extends State<WaterHistoryWidget> {
       ),
       Container(
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              children: List.generate(
-                  10,
-                  (index) => GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            imageStates[index] = !imageStates[index];
-                            CalculateWater(index, defaultWater);
-                            updateCapacity(
-                                widget.userID, getDate(_selectedDate));
-                          });
-                        },
-                        child: Image.asset(
-                          imageStates[index]
-                              ? image1 // Replace with your first image asset
-                              : image2, // Replace with your second image asset
-                          height: MediaQuery.of(context).size.height * (1 / 11),
-                          width: MediaQuery.of(context).size.width * (1 / 12),
-                        ),
-                      )),
-            ),
-            Expanded(
-                child: IconButton(
-              icon: Icon(Icons.add_circle_rounded),
-              onPressed: () {},
-            )),
-          ],
+          children: List.generate(
+              10,
+              (index) => GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        imageStates[index] = !imageStates[index];
+                        CalculateWater(index, defaultWater);
+                        updateCapacity(
+                            widget.userID, getDate(_selectedDate));
+                      });
+                    },
+                    child: Image.asset(
+                      imageStates[index]
+                          ? image1 // Replace with your first image asset
+                          : image2, // Replace with your second image asset
+                      height: MediaQuery.of(context).size.height * (1 / 11),
+                      width: MediaQuery.of(context).size.width * (1 / 11),
+                    ),
+                  )),
         ),
       ),
       Divider(height: 0, thickness: 2, color: Colors.grey),

@@ -2,7 +2,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:healthylife/page/account/auth_page.dart';
-import 'package:healthylife/page/account/splashscreen.dart';
+import 'package:healthylife/page/account/first_screen.dart';
 import 'package:healthylife/page/add_info/addinfo.dart';
 import 'package:healthylife/page/auth.dart';
 import 'package:healthylife/util/color_theme.dart';
@@ -43,6 +43,8 @@ class _RegisterState extends State<RegisterPage>{
         await Auth().createUserWithEmailAndPassword(
             email: _emailController.text,
             password: _passwordController.text);
+
+        Navigator.pop(context);
       } else{
         SnackBarErrorMess.show(context, 'Mật khẩu không trùng nhau');
       }

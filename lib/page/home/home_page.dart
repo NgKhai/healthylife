@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gauge_indicator/gauge_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:healthylife/page/bmi/bmi_page.dart';
-import 'package:healthylife/page/calo/calo_page.dart';
-import 'package:healthylife/page/fat/fat_page.dart';
-import 'package:healthylife/page/water/water.dart';
 import 'package:healthylife/util/color_theme.dart';
 import 'package:healthylife/widget/home/home_bmi_gauge_widget.dart';
 import 'package:healthylife/widget/home/home_exercise_widget.dart';
@@ -12,8 +7,8 @@ import 'package:healthylife/widget/home/home_fat_gauge_widget.dart';
 import 'package:healthylife/widget/home/home_water_gauge_widget.dart';
 import 'package:intl/intl.dart';
 
+import '../../model/UserDetail.dart';
 import '../../model/UserHealthy.dart';
-import '../../util/fat_gauge_check.dart';
 import '../../widget/home/home_calo_gauge_widget.dart';
 import '../exercise/exercise_page.dart';
 
@@ -21,8 +16,9 @@ import '../home/test.dart';
 
 class HomePage extends StatefulWidget {
   UserHealthy userHealthy;
+  UserDetail userDetail;
 
-  HomePage({required this.userHealthy});
+  HomePage({required this.userHealthy, required this.userDetail});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -35,32 +31,18 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Padding(
-          padding: EdgeInsets.only(top: 10, bottom: 10),
-          child: CircleAvatar(
-            backgroundImage: NetworkImage('https://cdn-icons-png.freepik.com/512/4811/4811032.png'),
-          ),
-        ),
-        title: Text(
-          widget.userHealthy.UserName,
-          style: GoogleFonts.getFont(
-            'Montserrat',
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        actions: [
-          IconButton(
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            onPressed: () {},
-            icon: Icon(
-              Icons.settings,
+        automaticallyImplyLeading: false,
+        title: Center(
+          child: Text(
+            "Xin chào, ${widget.userHealthy.UserName}",
+            style: GoogleFonts.getFont(
+              'Montserrat',
               color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
             ),
           ),
-        ],
+        ),
         backgroundColor: ColorTheme.lightGreenColor,
       ),
       body: SingleChildScrollView(
@@ -85,7 +67,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-              HomeCaloGaugeWidget(userID: widget.userHealthy.UserID),
+              HomeCaloGaugeWidget(userID: widget.userHealthy.UserID, userCalo: widget.userDetail.UserCalo),
               SizedBox(height: MediaQuery.of(context).size.height * 0.025),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -171,7 +153,7 @@ class _HomePageState extends State<HomePage> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) => ExercisePage(
-                                    userID: widget.userHealthy.UserID, dateHistory: DateFormat('dd/MM/yyyy').format(DateTime.now()))));
+                                    userID: widget.userHealthy.UserID, dateHistory: DateFormat('dd/MM/yyyy').format(DateTime.now()), userCalo: widget.userDetail.UserCalo)));
                       },
                       child: Text(
                         'Xem tất cả',

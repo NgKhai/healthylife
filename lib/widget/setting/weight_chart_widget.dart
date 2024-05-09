@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:d_chart/commons/axis.dart';
 import 'package:d_chart/commons/config_render.dart';
 import 'package:d_chart/commons/enums.dart';
@@ -9,44 +10,38 @@ import 'package:d_chart/commons/viewport.dart';
 import 'package:d_chart/time/line.dart';
 import 'package:flutter/material.dart';
 import 'package:d_chart/commons/data_model.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 class WeightChartWidget extends StatefulWidget {
-  const WeightChartWidget({super.key});
+  String userID;
+
+  WeightChartWidget({super.key, required this.userID});
 
   @override
   State<WeightChartWidget> createState() => _WeightChartWidgetState();
 }
 
 class _WeightChartWidgetState extends State<WeightChartWidget> {
-  late List<TimeData> timeDataList;
+  late List<TimeData> timeDataList = [];
 
   final List<TimeGroup> timeGroupList = [];
+
+  List<num> WeightList = [];
 
   @override
   void initState() {
     super.initState();
-    generateRandomData();
+    getTimeDataHistory();
   }
 
-  void generateRandomData() {
+  Future<void> getTimeDataHistory() async {
     final now = DateTime.now();
 
-    timeDataList = [
-      TimeData(domain: DateTime(2024, 2, 3), measure: 78),
-      TimeData(domain: DateTime(2024, 2, 10), measure: 78),
-      TimeData(domain: DateTime(2024, 2, 17), measure: 77),
-      TimeData(domain: DateTime(2024, 2, 24), measure: 77),
-      TimeData(domain: DateTime(2024, 3, 2), measure: 76),
-      TimeData(domain: DateTime(2024, 3, 9), measure: 76),
-      TimeData(domain: DateTime(2024, 3, 16), measure: 76),
-      // TimeData(domain: now.subtract(Duration(days: 6)), measure: 1200),
-      // TimeData(domain: now.subtract(Duration(days: 5)), measure: 2200),
-      // TimeData(domain: now.subtract(Duration(days: 4)), measure: 2600),
-      // TimeData(domain: now.subtract(Duration(days: 3)), measure: 2200),
-      // TimeData(domain: now.subtract(Duration(days: 2)), measure: 2100),
-      // TimeData(domain: now.subtract(Duration(days: 1)), measure: 700),
-      // TimeData(domain: now.subtract(Duration(days: 0)), measure: 900),
-    ];
+    for(int i = 0; i < 7; i++) {
+      await getUserDetail(widget.userID, DateTime(now.year, now.month, now.day - i));
+      timeDataList.add(TimeData(domain: DateTime(now.year, now.month, now.day - i), measure: WeightList[i]));
+    }
 
     timeGroupList.add(
       TimeGroup(
@@ -54,30 +49,75 @@ class _WeightChartWidgetState extends State<WeightChartWidget> {
         data: timeDataList,
       ),
     );
+  }
 
-    setState(() {});
+  Future<void> getUserDetail(String userID, DateTime dateTime) async {
+    try {
+      String dateHistory = DateFormat('dd/MM/yyyy').format(dateTime);
+
+      final userDetailQuerySnapshot = await FirebaseFirestore.instance
+          .collection('UserDetail')
+          .where('UserID', isEqualTo: userID)
+          .where('DateHistory', isEqualTo: dateHistory)
+          .get();
+
+      // Nếu dữ liệu tồn tại
+      if (userDetailQuerySnapshot.docs.isNotEmpty) {
+        // lấy id document
+        final document = userDetailQuerySnapshot.docs.first;
+
+        final Weight = document['UserWeight'];
+
+        setState(() {
+          WeightList.add(Weight);
+        });
+      } else {
+        setState(() {
+          WeightList.add(0);
+
+        });
+      }
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.04),
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.25,
-        child: DChartLineT(
-          allowSliding: true,
-          domainAxis: DomainAxis(
-            labelAnchor: LabelAnchor.centered,
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          'Thống kê cân nặng trong 7 ngày qua',
+          style: GoogleFonts.getFont(
+            'Montserrat',
+            color: Colors.grey,
+            fontWeight: FontWeight.w500,
+            fontSize: 13,
           ),
-          measureAxis: MeasureAxis(desiredTickCount: 5),
-          configRenderLine: ConfigRenderLine(
-            areaOpacity: 0.3,
-            includeArea: true,
-            includePoints: true,
-          ),
-          groupList: timeGroupList,
+          textAlign: TextAlign.center,
         ),
-      ),
+        Padding(
+          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.04),
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.25,
+            child: DChartLineT(
+              allowSliding: true,
+              domainAxis: DomainAxis(
+                labelAnchor: LabelAnchor.centered,
+              ),
+              measureAxis: MeasureAxis(desiredTickCount: 5),
+              configRenderLine: ConfigRenderLine(
+                areaOpacity: 0.3,
+                includeArea: true,
+                includePoints: true,
+              ),
+              groupList: timeGroupList,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

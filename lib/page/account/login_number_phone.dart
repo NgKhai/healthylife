@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:healthylife/page/account/splashscreen.dart';
+import 'package:healthylife/page/account/first_screen.dart';
 import 'package:healthylife/page/account/verify_page.dart';
 import 'package:healthylife/util/snack_bar_error_mess.dart';
 
@@ -25,6 +25,8 @@ class _LoginWithNumberPhoneState extends State<LoginWithNumberPhone> {
 
   Future<void> verifyPhone() async{
     if(phoneController.text.isNotEmpty){
+
+      print('hello 1');
       // Xác thực thành công
       verificationCompleted(PhoneAuthCredential phoneAuthCredential) async{
         await FirebaseAuth.instance.signInWithCredential(phoneAuthCredential);
@@ -55,6 +57,9 @@ class _LoginWithNumberPhoneState extends State<LoginWithNumberPhone> {
         codeSent: codeSent,
         codeAutoRetrievalTimeout: codeAutoRetrievalTimeout,
       );
+
+      print('hello 2');
+
     } else{
       SnackBarErrorMess.show(context, "Nhập số điện thoại");
     }
@@ -112,7 +117,7 @@ class _LoginWithNumberPhoneState extends State<LoginWithNumberPhone> {
               left: -10,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => SplashScreenPage()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => FirstScreenPage()));
                   //Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(

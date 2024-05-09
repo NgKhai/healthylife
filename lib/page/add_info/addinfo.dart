@@ -694,7 +694,8 @@ class _AddInforState extends State<AddInfo>{
             foregroundColor: MaterialStateProperty.all(Colors.white)
           ),
           onPressed: () async {
-            //Auth().singOut();
+            // Auth().signOut();
+            // Navigator.pop(context);
             String name = nameController.text.trim();
             String email = user!.email ?? "";
             String? credential;
@@ -706,24 +707,16 @@ class _AddInforState extends State<AddInfo>{
             int? height = _selectedHeight;
             double? bmi = weight!/((height!/100*height/100));
             double fat;
-            double calo;
+            double bmr;
             if(isSelected == true){
               selectedGender = "Nam";
-              fat = 1.2 * bmi + 0.23 * age - 5.4 - 10.8;
-              calo = 66 + (13.7 * _selectedWeight!) + (5 * _selectedHeight!) - (6.8 * age);
-              // print('Gender: $selectedGender');
-              // print('Fat: $fat');
-              // print('calo: $calo');
+               fat = 1.2 * bmi + 0.23 * age - 5.4 - 10.8;
+               bmr = 66 + (13.7 * _selectedWeight!) + (5 * _selectedHeight!) - (6.8 * age);
             } else{
               selectedGender = "Nữ";
               fat = 1.2 * bmi + 0.23 * age - 5.4;
-              calo = 655 + (9.6 * _selectedWeight!) + (1.8 * _selectedHeight!) - (4.7 * age);
-              // print('Gender: $selectedGender');
-              // print('Fat: $fat');
-              // print('calo: $calo');
+              bmr = 655 + (9.6 * _selectedWeight!) + (1.8 * _selectedHeight!) - (4.7 * age);
             }
-
-            //print("BMI:" + bmi.toString());
             if(email.isNotEmpty){
               credential = email;
               await saveUser(name, credential, birthday, selectedGender);
@@ -732,15 +725,13 @@ class _AddInforState extends State<AddInfo>{
               await saveUser(name, credential!, birthday, selectedGender);
             }
             //saveUser(name, email!, birthday, selectedGender);
-            await saveUserDetail(weight, height, bmi, fat, calo, dateHistory);
-            print('UserID: $userID');
-            print('UserDetaiID: $userDetailID');
-            // if(name.isEmpty || birthday == null){
-            //
-            // } else{
-            //   SnackBarErrorMess.show(context, "Nhập đủ thông tin");
-            // }
-            Navigator.push(context, MaterialPageRoute(builder: (context) => ExcerciseIntensity(userHealthy: UserHealthy(userID!, credential!, selectedGender, name, birthday), userDetailID: userDetailID)));
+            await saveUserDetail(weight, height, bmi, fat, dateHistory);
+
+            Navigator.push(context, MaterialPageRoute(builder: (context) => ExcerciseIntensity(
+                userHealthy: UserHealthy(userID!, credential!, selectedGender, name, birthday),
+                userDetailID: userDetailID,
+                bmr: bmr,
+            )));
             },
           child: Text('Xác nhận',
             style: TextStyle(fontSize: 16),
@@ -768,10 +759,10 @@ class _AddInforState extends State<AddInfo>{
 
   }
 
-  Future<void> saveUserDetail(int weight, int height, double bmi, double fat, double calo, String dateHistory) async {
+  Future<void> saveUserDetail(int weight, int height, double bmi, double fat, String dateHistory) async {
     await FirebaseFirestore.instance
         .collection('UserDetail')
-        .add({'UserWeight': weight, 'UserHeight': height, 'UserBMI': bmi, 'UserFat': fat, 'UserCalo': calo, 'DateHistory': dateHistory})
+        .add({'UserWeight': weight, 'UserHeight': height, 'UserBMI': bmi, 'UserFat': fat, 'DateHistory': dateHistory})
         .then((DocumentReference docRef){
            setState(() {
              userDetailID = docRef.id;

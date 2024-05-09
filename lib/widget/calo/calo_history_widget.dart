@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:gauge_indicator/gauge_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthylife/model/CaloHistory.dart';
+import 'package:healthylife/model/CustomExercise.dart';
 import 'package:healthylife/model/Exercise.dart';
 import 'package:healthylife/util/color_theme.dart';
 import 'package:intl/intl.dart';
@@ -12,9 +13,10 @@ import '../../util/snack_bar_error_mess.dart';
 
 class CaloHistoryWidget extends StatefulWidget {
   String userID;
+  num userCalo;
   Function(String) onDateChanged;
 
-  CaloHistoryWidget({required this.userID, required this.onDateChanged});
+  CaloHistoryWidget({required this.userID, required this.userCalo, required this.onDateChanged});
 
   @override
   State<CaloHistoryWidget> createState() => _CaloHistoryWidgetState();
@@ -30,6 +32,8 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
 
   double minGaugeValue = 0;
   double maxGaugeValue = 1500;
+
+  List<CustomExercise> customExercises = [];
 
   List<ExerciseDetailHistory> exerciseHistories = [];
   List<Exercise> exercises = [];
@@ -86,6 +90,23 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
     return DateFormat('dd/MM/yyyy').format(_selectedDate);
   }
 
+  String getFormatDuration(num minutes) {
+    if(minutes == 0) {
+      return '';
+    } else {
+      int totalSeconds = (minutes * 60).floor();
+      int minutesPart = totalSeconds ~/ 60;
+      int secondsPart = totalSeconds % 60;
+      String formattedDuration = '$minutesPart phút ';
+
+      if (secondsPart > 0) {
+        formattedDuration += '$secondsPart giây';
+      }
+
+      return formattedDuration + " - ";
+    }
+  }
+
   String getRelativeDay(DateTime selectedDate) {
     DateTime today = DateTime.now();
     int difference = today.difference(selectedDate).inDays;
@@ -111,10 +132,14 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
 
   Future<void> fetchData() async {
     setState(() {
+      maxGaugeValue = widget.userCalo.toDouble();
+
       totalExerciseCalo = 0;
       totalFoodCalo = 0;
 
       isLoading = true;
+
+      customExercises.clear();
 
       exerciseHistories.clear();
       exercises.clear();
@@ -122,6 +147,10 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
       foodHistories.clear();
       foods.clear();
     });
+
+    await getUserCalo(widget.userID, getDate(_selectedDate));
+
+    await getCustomExercise(widget.userID, getDate(_selectedDate));
 
     // Lấy dữ liệu từ Exercise History
     await getCaloHistory(widget.userID, getDate(_selectedDate));
@@ -136,15 +165,71 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
       totalFoodCalo += (foodHistories[i].NetWeight * foods[i].FoodCalo) / defaultNetWeight;
     }
 
-
     // Tính tổng calo tiêu hao
     for(var i = 0; i < exerciseHistories.length; i++) {
       totalExerciseCalo += (exerciseHistories[i].Duration * exercises[i].ExerciseCalo) / defaultDuration;
     }
 
+    // Tính tổng calo tiêu hao (custom)
+    for(var i = 0; i < customExercises.length; i++) {
+      totalExerciseCalo += customExercises[i].CustomExerciseCalo;
+    }
+
     setState(() {
       isLoading = false;
     });
+  }
+
+  Future<void> getUserCalo(String userID, String dateHistory) async {
+    final userDetailQuerySnapshot = await FirebaseFirestore.instance
+        .collection('UserDetail')
+        .where('UserID', isEqualTo: userID)
+        .where('DateHistory', isEqualTo: dateHistory)
+        .get();
+
+    if (userDetailQuerySnapshot.docs.isNotEmpty) {
+      final document = userDetailQuerySnapshot.docs.first;
+
+      // lấy id document
+      final _userCalo = document['UserCalo'];
+
+      setState(() {
+        maxGaugeValue = _userCalo;
+      });
+
+      // Nếu dữ liệu chưa có sẽ tạo rỗng
+    } else {
+      setState(() {
+        maxGaugeValue = widget.userCalo.toDouble();
+      });
+    }
+  }
+
+  Future<void> getCustomExercise(String userID, String dateHistory) async {
+    try {
+      // lấy dữ liệu CaloHistory thông qua userID và date history
+      final customExerciseQuerySnapshot = await FirebaseFirestore.instance
+          .collection('CustomExercise')
+          .where('UserID', isEqualTo: userID)
+          .where('DateHistory', isEqualTo: dateHistory)
+          .get();
+
+      // Nếu dữ liệu tồn tại
+      if (customExerciseQuerySnapshot.docs.isNotEmpty) {
+
+        customExercises = customExerciseQuerySnapshot.docs.map((doc) {
+          return CustomExercise.fromFirestore(doc);
+        }).toList();
+
+        // Nếu dữ liệu chưa có sẽ tạo rỗng
+      } else {
+
+
+
+      }
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
   }
 
   Future<void> getCaloHistory(String userID, String dateHistory) async {
@@ -217,6 +302,41 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
       exercises = fetchedExercises;
       foods = fetchedFoods;
     });
+  }
+
+  Future<void> removeCustomExercises(String customExerciseID, int index) async {
+    final customExerciseQuerySnapshot = await FirebaseFirestore.instance
+        .collection('CustomExercise')
+        .where('CustomExerciseID', isEqualTo: customExerciseID)
+        .get();
+
+    if (customExerciseQuerySnapshot.docs.isNotEmpty) {
+      final document = customExerciseQuerySnapshot.docs.first;
+
+      String itemName = '';
+
+        CustomExercise removedCustomExercise = customExercises[index];
+
+        await FirebaseFirestore.instance
+            .collection('CustomExercise')
+            .doc(document.id)
+            .delete();
+
+        itemName = removedCustomExercise.CustomExerciseName;
+
+        totalExerciseCalo -= removedCustomExercise.CustomExerciseCalo;
+
+        setState(() {
+          customExercises.removeAt(index);
+        });
+
+      SnackBarErrorMess.show(
+          context, 'Xóa ${itemName} thành công!');
+
+
+    } else {
+      SnackBarErrorMess.show(context, 'Không thể tìm thấy lịch sử calo.');
+    }
   }
 
   Future<void> removeExerciseAndFood(int index, bool itemSelected) async {
@@ -499,7 +619,7 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
                         fontWeight: FontWeight.bold,
                         color: Colors.grey),
                   ),
-                  if(exercises.isEmpty)
+                  if(exercises.isEmpty && customExercises.isEmpty)
                   Padding(
                     padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.01),
                     child: Center(
@@ -515,6 +635,53 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
                     ),
                   )
                   else
+
+                    // Custom calo
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: customExercises.length,
+                      itemBuilder: (context, index) {
+                        if (index >= customExercises.length) {
+                          // Trả về empty widget khi index > range
+                          return SizedBox.shrink();
+                        }
+
+                        final customExercise = customExercises[index];
+
+                        return Dismissible(
+                          key: UniqueKey(),
+                          direction: DismissDirection.endToStart,
+                          // Kéo sang phải đề remove dữ liệu
+                          onDismissed: (direction) {
+                            removeCustomExercises(customExercise.CustomExerciseID, index);
+                          },
+                          background: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              gradient: LinearGradient(
+                                colors: [
+                                  ColorTheme.darkGreenColor,
+                                  ColorTheme.lightGreenColor
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                            ),
+                            alignment: Alignment.centerRight,
+                            child: Icon(
+                              Icons.delete,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                          child: buildCustomExerciseItem(
+                              customExercise, index), // Widget hiển thị các item food
+                        );
+                      },
+                    ),
+
+                    // Calo thường
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -632,6 +799,58 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
     );
   }
 
+  Widget buildCustomExerciseItem(CustomExercise customExercise, int index) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Image.network(
+          //   exercise.ExerciseImage ?? "",
+          //   width: 50,
+          //   height: 50,
+          //   errorBuilder: (context, error, stackTrace) =>
+          //   const Icon(Icons.image),
+          // ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  customExercise.CustomExerciseName ?? "",
+                  style: GoogleFonts.getFont('Montserrat',
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "${getFormatDuration(customExercise.CustomExerciseDuration)}${customExercise.CustomExerciseCalo.toStringAsFixed(0)} calo",
+                  style: GoogleFonts.getFont('Montserrat',
+                      fontSize: 16, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              setState(() {
+                removeCustomExercises(customExercise.CustomExerciseID, index);
+              });
+            },
+            icon: Icon(
+              Icons.remove_circle_outline,
+              color: Colors.grey,
+              size: 30,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget buildExerciseItem(Exercise exercise, int index) {
     return Container(
       padding: const EdgeInsets.all(6),
@@ -660,7 +879,7 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
                       fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  "${exerciseHistories[index].Duration} phút - ${(exerciseHistories[index].Duration * exercise.ExerciseCalo) / 30} calo",
+                  "${exerciseHistories[index].Duration} phút - ${((exerciseHistories[index].Duration * exercise.ExerciseCalo) / 30).toStringAsFixed(0)} calo",
                   style: GoogleFonts.getFont('Montserrat',
                       fontSize: 16, color: Colors.grey),
                 ),
@@ -711,7 +930,7 @@ class _CaloHistoryWidgetState extends State<CaloHistoryWidget> {
                     fontSize: 16, fontWeight: FontWeight.bold),
               ),
               Text(
-                "${foodHistories[index].NetWeight}g - ${(foodHistories[index].NetWeight * food.FoodCalo) / 100} calo",
+                "${foodHistories[index].NetWeight}g - ${((foodHistories[index].NetWeight * food.FoodCalo) / 100).toStringAsFixed(0)} calo",
                 style: GoogleFonts.getFont('Montserrat',
                     fontSize: 16, color: Colors.grey),
               ),

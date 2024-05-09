@@ -14,8 +14,9 @@ import '../../util/snack_bar_error_mess.dart';
 class FoodCaloPage extends StatefulWidget {
   final String userID;
   final String dateHistory;
+  final num userCalo;
 
-  const FoodCaloPage({super.key, required this.userID, required this.dateHistory});
+  const FoodCaloPage({super.key, required this.userID, required this.dateHistory, required this.userCalo});
 
   @override
   State<FoodCaloPage> createState() => _FoodCaloState();
@@ -146,7 +147,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
         }).then((value) {
           print("Calo history update\nUID:${caloHistory.CaloHistoryID}");
           Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo)));
         }).catchError(
             (error) => print("Failed to update calo history: $error"));
       } else {
@@ -161,7 +162,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
             .then((value) {
           print("Calo history Added\nUID:${caloHistory.CaloHistoryID}");
           Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo)));
         }).catchError((error) => print("Failed to add calo history: $error"));
       }
     } on Exception catch (e) {
@@ -203,7 +204,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
         }).then((value) {
           print("Calo history update\nUID:${caloHistory.CaloHistoryID}");
           Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo)));
         }).catchError(
                 (error) => print("Failed to update calo history: $error"));
       } else {
@@ -218,7 +219,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
             .then((value) {
           print("Calo history Added\nUID:${caloHistory.CaloHistoryID}");
           Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo)));
         }).catchError((error) => print("Failed to add calo history: $error"));
       }
     } on Exception catch (e) {
@@ -237,7 +238,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
           highlightColor: Colors.transparent,
           onPressed: () {
             Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+                MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo)));
           }
         ),
         title: Text('Món ăn của bạn'),
@@ -313,7 +314,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
                                       child: InkResponse(
                                         onTap: () {
                                           Navigator.pushReplacement(context,
-                                              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+                                              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo)));
                                         },
                                         child: CircleAvatar(
                                           backgroundColor:
@@ -553,7 +554,7 @@ class _FoodCaloState extends State<FoodCaloPage> {
                                   child: InkResponse(
                                     onTap: () {
                                       Navigator.pushReplacement(context,
-                                          MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+                                          MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo)));
                                     },
                                     child: CircleAvatar(
                                       backgroundColor:

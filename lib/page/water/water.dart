@@ -44,13 +44,13 @@ class _WaterPageState extends State<WaterPage> {
             onPressed: () {},
             icon: Icon(
               Icons.settings,
-              color: Colors.white,
+              color: ColorTheme.lightGreenColor,
             ),
           ),
         ],
         backgroundColor: ColorTheme.lightGreenColor,
       ),
-      body: Container(
+      body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           vertical: MediaQuery.of(context).size.width * 0.03,
           horizontal: MediaQuery.of(context).size.height * 0.02,

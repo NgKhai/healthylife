@@ -91,7 +91,7 @@ class _HomeWaterGaugeWidgetState extends State<HomeWaterGaugeWidget> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(15.0),
           child: Container(
-            color: Colors.white,
+            color: ColorTheme.gaugeColor1,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -107,7 +107,7 @@ class _HomeWaterGaugeWidgetState extends State<HomeWaterGaugeWidget> {
                             textAlign: TextAlign.center,
                             style: GoogleFonts.getFont(
                               'Montserrat',
-                              color: ColorTheme.darkGreenColor,
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 24,
                             ),
@@ -117,7 +117,7 @@ class _HomeWaterGaugeWidgetState extends State<HomeWaterGaugeWidget> {
                             textAlign: TextAlign.center,
                             style: GoogleFonts.getFont(
                               'Montserrat',
-                              color: ColorTheme.darkGreenColor,
+                              color: Colors.white,
                               fontWeight: FontWeight.normal,
                               fontSize: 18,
                             ),
@@ -129,11 +129,12 @@ class _HomeWaterGaugeWidgetState extends State<HomeWaterGaugeWidget> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.01),
                           Text(
                             'Cần nạp',
                             style: GoogleFonts.getFont(
                               'Montserrat',
-                              color: ColorTheme.darkGreenColor,
+                              color: Colors.white,
                               fontWeight: FontWeight.w500,
                               fontSize: 20,
                             ),
@@ -145,7 +146,7 @@ class _HomeWaterGaugeWidgetState extends State<HomeWaterGaugeWidget> {
                             duration: const Duration(milliseconds: 2000),
                             builder: (context, _, value) => RadialGaugeLabel(
                               style: TextStyle(
-                                color: ColorTheme.darkGreenColor,
+                                color: Colors.white,
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -161,7 +162,7 @@ class _HomeWaterGaugeWidgetState extends State<HomeWaterGaugeWidget> {
                               degrees: 360,
                               pointer: null,
                               progressBar: GaugeProgressBar.basic(
-                                color: ColorTheme.gaugeColor1,
+                                color: Colors.white,
                               ),
                               transformer:
                               const GaugeAxisTransformer.colorFadeIn(
@@ -190,7 +191,7 @@ class _HomeWaterGaugeWidgetState extends State<HomeWaterGaugeWidget> {
                             textAlign: TextAlign.center,
                             style: GoogleFonts.getFont(
                               'Montserrat',
-                              color: ColorTheme.darkGreenColor,
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 24,
                             ),
@@ -200,7 +201,7 @@ class _HomeWaterGaugeWidgetState extends State<HomeWaterGaugeWidget> {
                             textAlign: TextAlign.center,
                             style: GoogleFonts.getFont(
                               'Montserrat',
-                              color: ColorTheme.darkGreenColor,
+                              color: Colors.white,
                               fontWeight: FontWeight.normal,
                               fontSize: 18,
                             ),

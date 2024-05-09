@@ -12,8 +12,9 @@ import 'package:healthylife/widget/home/home_bottom_navigation.dart';
 class ExcerciseIntensity extends StatefulWidget{
   final UserHealthy? userHealthy;
   final String? userDetailID;
+  final double? bmr;
 
-  const ExcerciseIntensity({Key? key, required this.userHealthy, required this.userDetailID,}) : super(key:key);
+  const ExcerciseIntensity({Key? key, required this.userHealthy, required this.userDetailID, required this.bmr}) : super(key:key);
   @override
   State<ExcerciseIntensity> createState() => _ExcerciseIntensityState();
 }
@@ -65,6 +66,7 @@ class _ExcerciseIntensityState extends State<ExcerciseIntensity>{
                       // print('UserID: '+ widget.userID.toString());
                       // print('UserDetailID: '+ widget.userDetailID.toString());
                       double R = 1.2;
+                      double calo = widget.bmr! * R;
                       FirebaseFirestore.instance
                           .collection('UserDetail')
                           .where('UserID', isEqualTo: widget.userHealthy?.UserID).get().then((querrySnapshot) {
@@ -72,7 +74,8 @@ class _ExcerciseIntensityState extends State<ExcerciseIntensity>{
                               //String userDetailID = doc.id;
                               FirebaseFirestore.instance
                                   .collection('UserDetail').doc(widget.userDetailID).update({
-                                'UserR':R
+                                'UserR':R,
+                                'UserCalo': calo
                               });
                             });
                       });
@@ -126,6 +129,7 @@ class _ExcerciseIntensityState extends State<ExcerciseIntensity>{
                       _selectedBtn5 = false;
 
                       double R = 1.375;
+                      double calo = widget.bmr! * R;
                       FirebaseFirestore.instance
                           .collection('UserDetail')
                           .where('UserID', isEqualTo: widget.userHealthy?.UserID).get().then((querrySnapshot) {
@@ -133,7 +137,8 @@ class _ExcerciseIntensityState extends State<ExcerciseIntensity>{
                           //String userDetailID = doc.id;
                           FirebaseFirestore.instance
                               .collection('UserDetail').doc(widget.userDetailID).update({
-                            'UserR':R
+                            'UserR':R,
+                            'UserCalo': calo
                           });
                         });
                       });
@@ -186,6 +191,7 @@ class _ExcerciseIntensityState extends State<ExcerciseIntensity>{
                       _selectedBtn5 = false;
 
                       double R = 1.55;
+                      double calo = widget.bmr! * R;
                       FirebaseFirestore.instance
                           .collection('UserDetail')
                           .where('UserID', isEqualTo: widget.userHealthy?.UserID).get().then((querrySnapshot) {
@@ -193,7 +199,8 @@ class _ExcerciseIntensityState extends State<ExcerciseIntensity>{
                           //String userDetailID = doc.id;
                           FirebaseFirestore.instance
                               .collection('UserDetail').doc(widget.userDetailID).update({
-                            'UserR':R
+                            'UserR':R,
+                            'UserCalo': calo
                           });
                         });
                       });
@@ -245,6 +252,7 @@ class _ExcerciseIntensityState extends State<ExcerciseIntensity>{
                       _selectedBtn5 = false;
 
                       double R = 1.725;
+                      double calo = widget.bmr! * R;
                       FirebaseFirestore.instance
                           .collection('UserDetail')
                           .where('UserID', isEqualTo: widget.userHealthy?.UserID).get().then((querrySnapshot) {
@@ -252,7 +260,8 @@ class _ExcerciseIntensityState extends State<ExcerciseIntensity>{
                           //String userDetailID = doc.id;
                           FirebaseFirestore.instance
                               .collection('UserDetail').doc(widget.userDetailID).update({
-                            'UserR':R
+                            'UserR':R,
+                            'UserCalo': calo
                           });
                         });
                       });
@@ -303,6 +312,7 @@ class _ExcerciseIntensityState extends State<ExcerciseIntensity>{
                       _selectedBtn5 = true;
 
                       double R = 1.9;
+                      double calo = widget.bmr! * R;
                       FirebaseFirestore.instance
                           .collection('UserDetail')
                           .where('UserID', isEqualTo: widget.userHealthy?.UserID).get().then((querrySnapshot) {
@@ -310,7 +320,8 @@ class _ExcerciseIntensityState extends State<ExcerciseIntensity>{
                           //String userDetailID = doc.id;
                           FirebaseFirestore.instance
                               .collection('UserDetail').doc(widget.userDetailID).update({
-                            'UserR':R
+                            'UserR':R,
+                            'UserCalo': calo
                           });
                         });
                       });

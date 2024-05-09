@@ -7,13 +7,15 @@ import 'package:healthylife/util/color_theme.dart';
 import 'package:intl/intl.dart';
 
 import '../../model/CaloHistory.dart';
+import '../../model/CustomExercise.dart';
 import '../../model/Exercise.dart';
 import '../../model/Food.dart';
 import '../../page/calo/calo_page.dart';
 
 class HomeCaloGaugeWidget extends StatefulWidget {
   String userID;
-  HomeCaloGaugeWidget({super.key, required this.userID});
+  num userCalo;
+  HomeCaloGaugeWidget({super.key, required this.userID, required this.userCalo});
 
   @override
   State<HomeCaloGaugeWidget> createState() => _HomeCaloGaugeWidgetState();
@@ -31,6 +33,8 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
 
   double minGaugeValue = 0;
   double maxGaugeValue = 1500;
+
+  List<CustomExercise> customExercises = [];
 
   List<ExerciseDetailHistory> exerciseHistories = [];
   List<Exercise> exercises = [];
@@ -52,6 +56,8 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
   Future<void> fetchData() async {
 
     setState(() {
+      maxGaugeValue = widget.userCalo.toDouble();
+
       totalExerciseCalo = 0;
       totalFoodCalo = 0;
 
@@ -63,6 +69,8 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
       foodHistories.clear();
       foods.clear();
     });
+
+    await getCustomExercise(widget.userID, getDate(DateTime.now()));
 
     // Lấy dữ liệu từ Exercise History
     await getCaloHistory(widget.userID, getDate(DateTime.now()));
@@ -81,6 +89,11 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
     // Tính tổng calo tiêu hao
     for(var i = 0; i < exerciseHistories.length; i++) {
       totalExerciseCalo += (exerciseHistories[i].Duration * exercises[i].ExerciseCalo) / defaultDuration;
+    }
+
+    // Tính tổng calo tiêu hao (custom)
+    for(var i = 0; i < customExercises.length; i++) {
+      totalExerciseCalo += customExercises[i].CustomExerciseCalo;
     }
 
     setState(() {
@@ -164,6 +177,33 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
     });
   }
 
+  Future<void> getCustomExercise(String userID, String dateHistory) async {
+    try {
+      // lấy dữ liệu CaloHistory thông qua userID và date history
+      final customExerciseQuerySnapshot = await FirebaseFirestore.instance
+          .collection('CustomExercise')
+          .where('UserID', isEqualTo: userID)
+          .where('DateHistory', isEqualTo: dateHistory)
+          .get();
+
+      // Nếu dữ liệu tồn tại
+      if (customExerciseQuerySnapshot.docs.isNotEmpty) {
+
+        customExercises = customExerciseQuerySnapshot.docs.map((doc) {
+          return CustomExercise.fromFirestore(doc);
+        }).toList();
+
+        // Nếu dữ liệu chưa có sẽ tạo rỗng
+      } else {
+
+
+
+      }
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -173,7 +213,7 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => CaloPage(userID: widget.userID,),
+            builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo),
           ),
         ).then((data) {
           // Update the state or perform actions based on the returned data
@@ -236,7 +276,7 @@ class _HomeCaloGaugeWidgetState extends State<HomeCaloGaugeWidget> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(height: MediaQuery.of(context).size.height * 0.01,),
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.01),
                           Text(
                             'Cần nạp',
                             style: GoogleFonts.getFont(

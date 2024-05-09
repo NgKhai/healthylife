@@ -16,8 +16,9 @@ import '../../widget/calo/calo_history_widget.dart';
 
 class CaloPage extends StatefulWidget {
   String userID;
+  num userCalo;
 
-  CaloPage({super.key, required this.userID});
+  CaloPage({super.key, required this.userID, required this.userCalo});
 
   @override
   State<CaloPage> createState() => _CaloPageState();
@@ -68,7 +69,7 @@ class _CaloPageState extends State<CaloPage> {
             onPressed: () {},
             icon: Icon(
               Icons.settings,
-              color: Colors.white,
+              color: ColorTheme.lightGreenColor,
             ),
           ),
         ],
@@ -82,7 +83,7 @@ class _CaloPageState extends State<CaloPage> {
         child: Column(
           children: [
             // CaloGaugeWidget(userID: 'lCIdlGoR2V2HPOEOFkF9'),
-            CaloHistoryWidget(userID: widget.userID, onDateChanged: updateDate),
+            CaloHistoryWidget(userID: widget.userID, userCalo: widget.userCalo, onDateChanged: updateDate),
             SizedBox(height: MediaQuery.of(context).size.height * 0.02),
 
             Text(
@@ -121,7 +122,7 @@ class _CaloPageState extends State<CaloPage> {
             ),
             onTap: () {
               Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => FoodCaloPage(userID: widget.userID, dateHistory: _selectedDate)));
+                  MaterialPageRoute(builder: (context) => FoodCaloPage(userID: widget.userID, dateHistory: _selectedDate, userCalo: widget.userCalo)));
             },
           ),
           SpeedDialChild(
@@ -137,7 +138,7 @@ class _CaloPageState extends State<CaloPage> {
               fontSize: 20,
             ),
             onTap: () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ExercisePage(userID: widget.userID, dateHistory: _selectedDate)));
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ExercisePage(userID: widget.userID, dateHistory: _selectedDate, userCalo: widget.userCalo)));
             },
           ),
         ],

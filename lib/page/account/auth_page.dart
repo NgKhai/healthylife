@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:healthylife/model/UserHealthy.dart';
@@ -20,24 +21,75 @@ class AuthPage extends StatelessWidget{
           if(snapshot.connectionState == ConnectionState.active){
             User? user = snapshot.data;
             if(user !=null){
-              // return HomeBottomNavigation(userHealthy: UserHealthy('lCIdlGoR2V2HPOEOFkF9', 'nguyenkhai1470@gmail.com', 'test123456', 'Nguyễn Khải', 'https://static.vecteezy.com/system/resources/previews/011/459/666/original/people-avatar-icon-png.png', '14/11/2003'));
-              return AddInfo();
+              String? userCredential;
+              print("phone num: " + user.phoneNumber.toString());
+              if(user.email == '') {
+                userCredential = user.phoneNumber;
+              } else {
+                userCredential = user.email;
+              }
+              FirebaseFirestore.instance
+                    .collection('User')
+                    .where('UserCredential', isEqualTo: userCredential)
+                    .get()
+                    .then((querySnapshot) {
+                  if(querySnapshot.docs.isNotEmpty) {
+                    // Dữ liệu đã tồn tại, chuyển hướng đến trang home
+                    DocumentSnapshot docSnapshot = querySnapshot.docs.first;
+                    // if(docSnapshot['UserCredential'] == 'test@gmail.com'){
+                      UserHealthy userHealthy = UserHealthy(
+                          docSnapshot['UserID'],
+                          docSnapshot['UserCredential'],
+                          docSnapshot['UserGender'],
+                          docSnapshot['UserName'],
+                          docSnapshot['UserBirthday']
+                      );
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => HomeBottomNavigation(userHealthy: userHealthy),
+                        ),
+                      );
+                    }
+                  else{
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddInfo(),
+                      ),
+                    );
+                  }
+                });
+
             } else{
               return LoginPage();
             }
           }
-          return const CircularProgressIndicator();
-          //user login
-          // if(snapshot.hasData && snapshot.hasData != null){
-          //   return AddInfo();
-          // }
-          // // user not login
-          // else{
-          //   return LoginPage();
-          // }
+          return Center(
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.2,
+              height: MediaQuery.of(context).size.width * 0.2,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 2,
+                    blurRadius: 7,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+                ),
+              ),
+            ), // Use the custom loader widget
+          );
         }
       )
     );
   }
-
 }

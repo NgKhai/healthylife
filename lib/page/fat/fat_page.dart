@@ -43,7 +43,7 @@ class _FatPageState extends State<FatPage> {
             onPressed: () {},
             icon: Icon(
               Icons.settings,
-              color: Colors.white,
+              color: ColorTheme.lightGreenColor,
             ),
           ),
         ],

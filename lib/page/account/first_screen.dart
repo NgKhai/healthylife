@@ -7,8 +7,8 @@ import 'package:healthylife/page/account/login_number_phone.dart';
 import 'package:healthylife/page/account/register.dart';
 import 'package:healthylife/util/color_theme.dart';
 
-class SplashScreenPage extends StatelessWidget{
-  const SplashScreenPage({super.key});
+class FirstScreenPage extends StatelessWidget{
+  const FirstScreenPage({super.key});
 
   @override
   Widget build(BuildContext context){
@@ -119,28 +119,7 @@ class SplashScreenPage extends StatelessWidget{
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                Center(
-                  child: GestureDetector(
-                    // onTap: () {
-                    //   // Navigator.push(
-                    //   //   context as BuildContext,
-                    //   //   MaterialPageRoute(builder: (context)),
-                    //   // );
-                    // },
-                    child: Text('Đăng nhập không cần tài khoản',
-                      style: GoogleFonts.getFont(
-                        'Montserrat',
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        decoration: TextDecoration.underline,
-                        decorationColor: Colors.white,
-                        decorationThickness: 2.0,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 80),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.1),
                 //SizedBox(height: ,)
               ],
             ),

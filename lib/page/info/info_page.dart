@@ -1,22 +1,31 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:healthylife/page/account/first_screen.dart';
 import 'package:healthylife/page/auth.dart';
+import 'package:healthylife/page/updateBMR/updateBMR.dart';
+import 'package:healthylife/util/color_theme.dart';
 import 'package:healthylife/widget/setting/height_chart_widget.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../model/UserDetail.dart';
+import '../../model/UserHealthy.dart';
 import '../../widget/setting/weight_chart_widget.dart';
 
-class SettingPage extends StatefulWidget {
-  const SettingPage({super.key});
-
+class InfoPage extends StatefulWidget {
+  final UserHealthy userHealthy;
+  const InfoPage({Key? key, required this.userHealthy}) : super(key:key);
   @override
-  State<SettingPage> createState() => _SettingPageState();
+  State<InfoPage> createState() => _InfoPageState();
 }
 
-class _SettingPageState extends State<SettingPage> {
+class _InfoPageState extends State<InfoPage> {
   bool showChart = false;
+  late List<UserDetail> userDetails = [];
+  num? userWeight;
+  num? userHeight;
 
   // late SharedPreferences logindata;
   //
@@ -38,20 +47,81 @@ class _SettingPageState extends State<SettingPage> {
   @override
   void initState() {
     super.initState();
-    initial();
+    fetchData();
   }
 
-  void initial() async {
-    // logindata = await SharedPreferences.getInstance();
-    //
-    // login = logindata.getBool('login') ?? false;
-    // avatar = await logindata.getString('avatar') ?? "";
-    // username = await logindata.getString('username') ?? "";
-    // dob = await logindata.getString('dob') ?? "";
-    // address = await logindata.getString('address') ?? "";
-    // phone = await logindata.getString('phone') ?? "";
-    // gender = await logindata.getString('gender') ?? "";
-    // email = await logindata.getString('email') ?? "";
+  Future<List<UserDetail>?> getUserDetailByUserID(String userId) async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('UserDetail')
+          .where('UserID', isEqualTo: userId)
+          .get();
+      //List<Map<String, dynamic>> userDetails = [];
+      if (querySnapshot.docs.isNotEmpty) {
+        userDetails = querySnapshot.docs.map((doc) => UserDetail.fromFirestore(doc)).toList();
+      }
+      return userDetails;
+    } catch (error) {
+      print('Không lấy được liệu: $error');
+      return null;
+    }
+  }
+
+  void fetchData() async {
+    // Thực hiện lấy dữ liệu UserWeight từ Firebase
+    List<UserDetail>? userDetailData = await getUserDetailByUserID(
+        widget.userHealthy.UserID);
+    if (userDetailData != null && userDetailData.isNotEmpty) {
+      setState(() {
+        userWeight = userDetailData[0].UserWeight;
+        userHeight = userDetailData[0].UserHeight;
+      });
+    }
+  }
+
+  _showDialog(BuildContext context, Widget widget) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        // int duration = defaultDuration;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              // backgroundColor: ColorTheme.lightGreenColor,
+              content: Stack(
+                clipBehavior: Clip.none,
+                children: <Widget>[
+                  Positioned(
+                    right: -40,
+                    top: -40,
+                    child: InkResponse(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: CircleAvatar(
+                        backgroundColor:
+                        ColorTheme.lightGreenColor,
+                        child: Icon(
+                          Icons.close,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      widget
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -66,23 +136,17 @@ class _SettingPageState extends State<SettingPage> {
             children: [
               Padding(
                 padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).size.height * (1 / 16),
+                  top: MediaQuery.of(context).size.height * (1 / 10),
                 ),
-                child: InkWell(
-                  onTap: () {
-                    print('Gắn trang info tại đây');
-                  }, //Gắn trang info
-                  child: Container(
-                      width: MediaQuery.of(context).size.width * (1 / 5),
-                      height: MediaQuery.of(context).size.width * (1 / 5),
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                      ),
-                      child: Image.network(
-                        "https://ps.w.org/user-avatar-reloaded/assets/icon-256x256.png?rev=2540745",
-                        fit: BoxFit.fill,
-                      )),
+                child: Center(
+                  child: Text("HEALTHY LIFE",
+                    style: GoogleFonts.getFont(
+                      'Montserrat',
+                      fontSize: 40,
+                      color: ColorTheme.backgroundColor,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                 ),
               ),
               Padding(
@@ -90,55 +154,36 @@ class _SettingPageState extends State<SettingPage> {
                     top: MediaQuery.of(context).size.height * (1 / 64)),
                 child: Container(
                   child: Text(
-                    'Nguyễn Khải',
+                    '${widget.userHealthy.UserName}',
                     //'${utf8.decode(username.codeUnits)}',
                     style: GoogleFonts.getFont(
                       'Montserrat',
-                      color: Theme.of(context).primaryColor,
+                      color: ColorTheme.darkGreenColor,
                       fontWeight: FontWeight.bold,
-                      fontSize: 20,
+                      fontSize: 24,
                     ),
                   ),
                 ),
               ),
               Container(
                 child: Text(
-                  'email@gmail.com',
+                  '${widget.userHealthy.UserCredential}',
                   style: GoogleFonts.getFont(
                     'Montserrat',
-                    color: Theme.of(context).primaryColor,
+                    color: Colors.grey,
                     fontWeight: FontWeight.w500,
                     fontSize: 16,
                   ),
                 ),
               ),
 
-              Padding(
-                padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).size.height * (1 / 25)),
-                child: GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text('Lịch sử thay đổi'),
-                          content: HeightChartWidget(),
-                        );
-                      },
-                    );
-                    /*setState(() {
-                      showChart = true;
-                    });
-                    if (showChart == true)
-                      FatChartWidget();
-                    else
-                      SizedBox();*/
-                    // Navigator.push(context,
-                    //     MaterialPageRoute(builder: (context) {
-                    //   return Contact();
-                    // }));
-                  },
+              InkWell(
+                onTap: () {
+                  _showDialog(context, HeightChartWidget(userID: widget.userHealthy.UserID));
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).size.height * (1 / 25)),
                   child: Container(
                     width: MediaQuery.of(context).size.width * 0.95,
                     // height: MediaQuery.of(context).size.height * 0.08,
@@ -163,7 +208,7 @@ class _SettingPageState extends State<SettingPage> {
                             ),
                           ),
                           Text(
-                            '170 cm',
+                            '${userHeight} cm',
                             style: GoogleFonts.getFont(
                               'Montserrat',
                               color: Colors.grey[700],
@@ -178,25 +223,13 @@ class _SettingPageState extends State<SettingPage> {
                 ),
               ),
 
-              Padding(
-                padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).size.height * (1 / 25)),
-                child: InkWell(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text('Lịch sử thay đổi'),
-                          content: WeightChartWidget(),
-                        );
-                      },
-                    );
-                    // Navigator.push(context,
-                    //     MaterialPageRoute(builder: (context) {
-                    //   return CustomTable();
-                    // }));
-                  },
+              InkWell(
+                onTap: () {
+                  _showDialog(context, WeightChartWidget(userID: widget.userHealthy.UserID));
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).size.height * (1 / 25)),
                   child: Container(
                     width: MediaQuery.of(context).size.width * 0.95,
                     // height: MediaQuery.of(context).size.height * 0.08,
@@ -221,7 +254,7 @@ class _SettingPageState extends State<SettingPage> {
                             ),
                           ),
                           Text(
-                            '76 kg',
+                            '${userWeight} kg',
                             style: GoogleFonts.getFont(
                               'Montserrat',
                               color: Colors.grey[700],
@@ -272,7 +305,7 @@ class _SettingPageState extends State<SettingPage> {
                             ),
                           ),
                           Text(
-                            '14/11/2003',
+                            '${widget.userHealthy.UserBirthday}',
                             style: GoogleFonts.getFont(
                               'Montserrat',
                               color: Colors.grey[700],
@@ -286,7 +319,66 @@ class _SettingPageState extends State<SettingPage> {
                   ),
                 ),
               ),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                    vertical: MediaQuery.of(context).size.height * (1 / 25)),
+                child: InkWell(
+                  onTap: () {
+                    // Navigator.push(context, MaterialPageRoute(builder: (context)=> UpdateBMR(
+                    //     userHealthy: UserHealthy(widget.userHealthy.UserID, widget.userHealthy.UserCredential, widget.userHealthy.UserGender, widget.userHealthy.UserName, widget.userHealthy.UserBirthday))));
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => UpdateBMR(
+                    //         userHealthy: UserHealthy(widget.userHealthy.UserID, widget.userHealthy.UserCredential, widget.userHealthy.UserGender, widget.userHealthy.UserName, widget.userHealthy.UserBirthday),
+                    //   ),
+                    // ).then((data) {
+                    //   // Update the state or perform actions based on the returned data
+                    //   if (data != null) {
+                    //     fetchData();
+                    //     // Perform actions based on the returned data
+                    //   }
+                    // });
 
+                      Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UpdateBMR(userHealthy: widget.userHealthy),
+                      ),
+                    ).then((data) {
+                      // Update the state or perform actions based on the returned data
+                      if (data != null) {
+                        fetchData();
+                        // Perform actions based on the returned data
+                      }
+                    });
+                    },
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.95,
+                    // height: MediaQuery.of(context).size.height * 0.08,
+                    decoration: BoxDecoration(
+                      color: Color(0xFFD9D9D9),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal:
+                          MediaQuery.of(context).size.width * 0.05,
+                          vertical:
+                          MediaQuery.of(context).size.height * 0.03),
+                      child:Text(
+                        'Cập nhật chỉ số',
+                        style: GoogleFonts.getFont(
+                          'Montserrat',
+                          color: Colors.black,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               Container(
                 child: TextButton(
                   style: ButtonStyle(
@@ -295,6 +387,7 @@ class _SettingPageState extends State<SettingPage> {
                   ),
                   onPressed: () {
                     Auth().signOut();
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => FirstScreenPage()));
                   },
                   child: Text(
                     'Đăng xuất',

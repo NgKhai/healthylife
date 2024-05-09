@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../model/CaloHistory.dart';
+import '../../model/CustomExercise.dart';
 import '../../model/Exercise.dart';
 import '../../model/ExerciseCategory.dart';
 import '../../util/snack_bar_error_mess.dart';
@@ -19,7 +20,9 @@ import '../calo/calo_page.dart';
 class ExercisePage extends StatefulWidget {
   String userID;
   String dateHistory;
-  ExercisePage({super.key, required this.userID, required this.dateHistory});
+  num userCalo;
+
+  ExercisePage({super.key, required this.userID, required this.dateHistory, required this.userCalo});
 
   @override
   State<ExercisePage> createState() => _ExerciseState();
@@ -28,6 +31,7 @@ class ExercisePage extends StatefulWidget {
 class _ExerciseState extends State<ExercisePage> {
   int _selectIndex = 0;
   int defaultDuration = 30;
+  int customCalo = 100;
 
   bool _isLoading = false;
 
@@ -41,6 +45,10 @@ class _ExerciseState extends State<ExercisePage> {
   late List<ExerciseDetailHistory> exerciseHistoryList = [];
 
   final TextEditingController _searchController = TextEditingController();
+
+  TextEditingController _customNameController = TextEditingController();
+  TextEditingController _customDurationController = TextEditingController();
+  TextEditingController _customCaloController = TextEditingController();
 
   @override
   void initState() {
@@ -136,7 +144,7 @@ class _ExerciseState extends State<ExercisePage> {
           print("Calo history update\nUID:${caloHistory.CaloHistoryID}");
           Navigator.pop(context);
           Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo)));
         }).catchError((error) => print("Failed to update Exercise history: $error"));
 
       } else {
@@ -152,11 +160,33 @@ class _ExerciseState extends State<ExercisePage> {
           print("Exercise history Added\nUID:${caloHistory.CaloHistoryID}");
           Navigator.pop(context);
           Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo)));
         }).catchError((error) => print("Failed to add Exercise history: $error"));
       }
     } on Exception catch (e) {
       print(e);
+    }
+  }
+
+  Future<void> updateCustomExercise(String userID, String dateHistory) async {
+    if(_customNameController.text.isEmpty || _customNameController.text.trim().isEmpty) {
+      SnackBarErrorMess.show(
+          context, 'Tên bài tập không được để trống!');
+    } else {
+      final customExerciseCollection =
+      FirebaseFirestore.instance.collection('CustomExercise');
+
+      final uid = customExerciseCollection.doc().id;
+
+      CustomExercise customExercise = CustomExercise(uid, userID, _customNameController.text, customCalo, 0, dateHistory);
+
+      await customExerciseCollection
+          .doc(customExercise.CustomExerciseID)
+          .set(customExercise.toJson());
+
+      Navigator.pop(context);
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo)));
     }
   }
 
@@ -170,7 +200,7 @@ class _ExerciseState extends State<ExercisePage> {
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
           onPressed: () => Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID))),
+              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo))),
         ),
         title: Text('Bài tập luyện sức khỏe'),
         titleTextStyle: GoogleFonts.getFont(
@@ -221,9 +251,135 @@ class _ExerciseState extends State<ExercisePage> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.search),
+                    icon: Icon(Icons.add),
                     color: Colors.white,
-                    onPressed: () {},
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          // int duration = defaultDuration;
+                          return StatefulBuilder(
+                            builder: (context, setState) {
+                              return AlertDialog(
+                                // backgroundColor: ColorTheme.lightGreenColor,
+                                content: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: <Widget>[
+                                    Positioned(
+                                      right: -40,
+                                      top: -40,
+                                      child: InkResponse(
+                                        onTap: () {
+                                          Navigator.pushReplacement(context,
+                                              MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo)));
+                                        },
+                                        child: CircleAvatar(
+                                          backgroundColor:
+                                          ColorTheme.lightGreenColor,
+                                          child: Icon(
+                                            Icons.close,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: <Widget>[
+                                        Text(
+                                          "Custom Calo",
+                                          style: GoogleFonts.getFont('Montserrat',
+                                              color: ColorTheme.darkGreenColor,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                        Text('Tên bài tập',
+                                          style: GoogleFonts.getFont(
+                                            'Montserrat',
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                        TextField(
+                                          controller: _customNameController,
+                                          decoration:  InputDecoration(
+                                              hintText: 'Tập gym, bơi lội,...',
+                                              hintStyle: GoogleFonts.getFont(
+                                                'Montserrat',
+                                                fontSize: 13,
+                                                color: Colors.grey,
+                                                fontWeight: FontWeight.normal,
+                                              ),
+                                              filled: true,
+                                              fillColor: Colors.white,
+                                              border: OutlineInputBorder(
+                                                  borderSide: BorderSide.none
+                                              ),
+                                              contentPadding: EdgeInsets.symmetric(horizontal: 15)
+                                          ),
+                                        ),
+                                        SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                        Text('Calo đã tiêu hao',
+                                          style: GoogleFonts.getFont(
+                                            'Montserrat',
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                        InputQty.int(
+                                          initVal: customCalo,
+                                          minVal: 1,
+                                          decoration: const QtyDecorationProps(
+                                              isBordered: false,
+                                              borderShape: BorderShapeBtn.circle,
+                                              width: 50,
+                                              constraints: BoxConstraints()),
+                                          onQtyChanged: (val) {
+                                            setState(() {
+                                              customCalo = val;
+                                            });
+                                          },
+                                        ),
+                                        SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            padding: EdgeInsets.all(15),
+                                            backgroundColor:
+                                            ColorTheme.backgroundColor,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(30),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Thêm ngay',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          onPressed: () {
+                                            updateCustomExercise(widget.userID, widget.dateHistory);
+                                          },
+                                        )
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
                   ),
                 ],
               )),
@@ -384,9 +540,6 @@ class _ExerciseState extends State<ExercisePage> {
                             ),
                           ),
                           onPressed: () {
-
-                            print('hello');
-
                             showDialog(
                               context: context,
                               builder: (context) {
@@ -404,7 +557,7 @@ class _ExerciseState extends State<ExercisePage> {
                                             child: InkResponse(
                                               onTap: () {
                                                 Navigator.pushReplacement(context,
-                                                    MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID)));
+                                                    MaterialPageRoute(builder: (context) => CaloPage(userID: widget.userID, userCalo: widget.userCalo)));
                                               },
                                               child: CircleAvatar(
                                                 backgroundColor:

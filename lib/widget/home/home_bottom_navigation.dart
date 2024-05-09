@@ -1,13 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import 'package:healthylife/model/UserDetail.dart';
 import 'package:healthylife/model/UserHealthy.dart';
-import 'package:healthylife/page/bmi/bmi_page.dart';
-import 'package:healthylife/page/calo/calo_page.dart';
-import 'package:healthylife/page/fat/fat_page.dart';
 import 'package:healthylife/page/home/home_page.dart';
-import 'package:healthylife/page/food_calo/food_calo.dart';
-import 'package:healthylife/page/setting/setting_page.dart';
+import 'package:healthylife/page/info/info_page.dart';
 import 'package:healthylife/page/walking/walking_page.dart';
 import 'package:intl/intl.dart';
 
@@ -42,10 +39,10 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
     await getUserDetail(widget.userHealthy.UserID, DateTime.now());
 
     _pages = [
-    HomePage(userHealthy: widget.userHealthy),
+    HomePage(userHealthy: widget.userHealthy, userDetail: userDetail),
     // FoodCaloPage(),
     WalkingPage(userDetail: userDetail),
-    SettingPage(),
+    InfoPage(userHealthy: widget.userHealthy),
     ];
 
     setState(() {
@@ -188,15 +185,15 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_max_outlined),
-            label: 'Home',
+            label: 'Trang chủ',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.food_bank_outlined),
-            label: 'Food',
+            icon: Icon(Icons.directions_run_outlined),
+            label: 'Chạy bộ',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_2_outlined),
-            label: 'Info',
+            label: 'Thông tin',
           ),
         ],
       ),
@@ -208,8 +205,8 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
       backgroundColor: Colors.grey[200], // Background color
       body: Center(
         child: Container(
-          width: 100,
-          height: 100,
+          width: MediaQuery.of(context).size.width * 0.1,
+          height: MediaQuery.of(context).size.height * 0.1,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
@@ -225,7 +222,7 @@ class _HomeBottomNavigationState extends State<HomeBottomNavigation> {
           child: Center(
             child: CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
-            ), // You can customize this CircularProgressIndicator to match your theme
+            ),
           ),
         ), // Use the custom loader widget
       ),
