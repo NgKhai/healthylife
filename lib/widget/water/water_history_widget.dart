@@ -31,7 +31,7 @@ class _WaterHistoryWidgetState extends State<WaterHistoryWidget> {
 
   bool isLoading = true;
 
-  List<bool> imageStates = List.generate(10, (index) => true);
+  List<bool> imageStates = List.generate(11, (index) => true);
   final String image1 = 'assets/images/empty_glass.png';
   final String image2 = 'assets/images/water_glass.png';
 
@@ -120,7 +120,7 @@ class _WaterHistoryWidgetState extends State<WaterHistoryWidget> {
     try {
       setState(() {
         totalWater = 0;
-        imageStates = List.generate(10, (index) => true);
+        imageStates = List.generate(11, (index) => true);
       });
 
       final waterHistoryCollection =
@@ -138,7 +138,7 @@ class _WaterHistoryWidgetState extends State<WaterHistoryWidget> {
 
         double _isFilled = _capacity / defaultWater;
 
-        if (_isFilled > 10) _isFilled = 10;
+        if (_isFilled > 11) _isFilled = 11;
 
         for (int i = 0; i < _isFilled; i++) {
           setState(() {
@@ -205,7 +205,8 @@ class _WaterHistoryWidgetState extends State<WaterHistoryWidget> {
           child: Container(
             color: ColorTheme.darkGreenColor,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -374,7 +375,7 @@ class _WaterHistoryWidgetState extends State<WaterHistoryWidget> {
       Container(
         child: Row(
           children: List.generate(
-              10,
+              11,
               (index) => GestureDetector(
                     onTap: () {
                       setState(() {
@@ -388,8 +389,8 @@ class _WaterHistoryWidgetState extends State<WaterHistoryWidget> {
                       imageStates[index]
                           ? image1 // Replace with your first image asset
                           : image2, // Replace with your second image asset
-                      height: MediaQuery.of(context).size.height * (1 / 11),
-                      width: MediaQuery.of(context).size.width * (1 / 11),
+                      height: MediaQuery.of(context).size.height * (1 / 12),
+                      width: MediaQuery.of(context).size.width * (1 / 12),
                     ),
                   )),
         ),
