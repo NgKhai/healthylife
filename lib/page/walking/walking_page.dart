@@ -258,7 +258,7 @@ class _WalkingPageState extends State<WalkingPage> {
     });
   }
 
-  void _trackLocation() async {
+  _trackLocation() async {
     if (isTracking) {
       final locationData = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
@@ -285,6 +285,8 @@ class _WalkingPageState extends State<WalkingPage> {
       await _calculateDistance();
 
       _calculateDuration();
+
+      await _trackLocation();
     }
   }
 
@@ -408,24 +410,6 @@ class _WalkingPageState extends State<WalkingPage> {
               ),
             ],
           ),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          //   children: [
-          //     ElevatedButton(
-          //       onPressed: () async {
-          //         if (!isTracking) {
-          //           _startTracking();
-          //         } else {
-          //           _stopTracking();
-          //           await updateWalking(widget.userDetail.UserID, getDate(DateTime.now()));
-          //           clearTrackingData();
-          //         }
-          //       },
-          //       child: Text(isTracking ? 'Stop' : 'Start'),
-          //     ),
-          //     Text('Speed: ${speed.toStringAsFixed(2)} m/s'),
-          //   ],
-          // ),
           Container(
             height: MediaQuery.of(context).size.height * 1 / 4,
             width: MediaQuery.of(context).size.width,
@@ -504,20 +488,12 @@ class _WalkingPageState extends State<WalkingPage> {
                               ),
                             ),
                             Text(
-                              speed.toStringAsFixed(2),
+                              "${speed.toStringAsFixed(2)} m/s",
                               style: GoogleFonts.getFont(
                                 'Montserrat',
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
-                              ),
-                            ),
-                            Text(
-                              ' m/s',
-                              style: GoogleFonts.getFont(
-                                'Montserrat',
-                                color: Colors.white,
-                                fontSize: 16,
                               ),
                             ),
                           ],
